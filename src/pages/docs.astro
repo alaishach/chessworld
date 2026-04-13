@@ -207,16 +207,227 @@ You can use multiple paragraphs, **bold**, *italics*, and inline `code`.</code><
         <div class="info-box">Both files are <strong>required</strong>. The platform supports: headings, bold, italic, inline code, unordered/ordered lists, tables, and horizontal rules.</div>
       </section>
 
-      <!-- The rest of your sections (api-routes, database, commit-standards, etc.) remain the same as they were already mostly correct. -->
+      <section id="api-routes" class="doc-section">
+        <h2>API Routes</h2>
+        <p>Because the platform runs on Astro SSR, your game can include server-side API routes. Place them inside your game folder under an <code>api/</code> subdirectory and they will be mounted automatically.</p>
+        <pre><code>games/your-game-name/
+└── api/
+    └── score.ts</code></pre>
+        <p>API routes must export a handler function using Astro's standard endpoint format:</p>
+        <pre><code>import type { APIRoute } from 'astro';
 
-      <!-- ... (keeping the rest unchanged for brevity, but all code blocks and minor typos are fixed similarly) ... -->
+export const POST: APIRoute = async ({ request }) => {
+  const body = await request.json();
+  // your logic here
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};</code></pre>
+        <div class="info-box"><strong>Scope your routes carefully.</strong> Your API routes share a namespace with the rest of the platform. Prefix all route filenames with your game name to avoid conflicts — e.g. <code>your-game-name-score.ts</code>, not just <code>score.ts</code>.</div>
+      </section>
+
+      <section id="database" class="doc-section">
+        <h2>Database Options</h2>
+        <p>Games that need to persist data (leaderboards, saved states, etc.) are responsible for their own storage. The platform does not provide a shared database.</p>
+        <p>Recommended options that work well on Netlify edge/functions:</p>
+        <ul>
+          <li><strong>Upstash Redis</strong> — serverless Redis, free tier available, ideal for leaderboards and counters</li>
+          <li><strong>PlanetScale / Turso</strong> — serverless MySQL/SQLite, good for relational data</li>
+          <li><strong>Supabase</strong> — Postgres with a generous free tier and a simple REST API</li>
+          <li><strong>localStorage</strong> — for single-player games where data only needs to persist per browser</li>
+        </ul>
+        <div class="info-box warn"><strong>Do not hardcode credentials.</strong> Store API keys and connection strings in environment variables. Document the variable names your game needs in your <code>README.md</code>. The platform maintainer will add them to Netlify before your game goes live.</div>
+      </section>
+
+      <section id="commit-standards" class="doc-section">
+        <h2>Commit Standards</h2>
+        <p>All commits must follow the <a href="https://www.conventionalcommits.org" target="_blank" rel="noopener">Conventional Commits</a> format. PRs with non-conforming commit histories will be asked to rebase before merge.</p>
+        <pre><code>type(scope): short description
+
+# Examples
+feat(pawn-push): add difficulty selector
+fix(pawn-push): correct pawn promotion logic
+docs(pawn-push): update rules.md controls table
+style(pawn-push): adjust board colour contrast
+refactor(pawn-push): extract move validation to helper
+chore(pawn-push): update game.json version to 1.1.0</code></pre>
+        <div class="commit-types">
+          <div class="commit-type"><code>feat</code><span>A new feature or mechanic</span></div>
+          <div class="commit-type"><code>fix</code><span>A bug fix</span></div>
+          <div class="commit-type"><code>docs</code><span>Documentation changes only</span></div>
+          <div class="commit-type"><code>style</code><span>Visual/CSS changes with no logic change</span></div>
+          <div class="commit-type"><code>refactor</code><span>Code restructure with no behaviour change</span></div>
+          <div class="commit-type"><code>chore</code><span>Maintenance tasks (version bumps, asset updates)</span></div>
+        </div>
+        <p>The scope should always be your game folder name. Keep the subject line under 72 characters and written in the imperative mood ("add", "fix", "update" — not "added" or "fixes").</p>
+      </section>
+
+      <section id="quality-standards" class="doc-section">
+        <h2>Quality Standards</h2>
+        <p>There is no minimum complexity requirement, but every submission is reviewed against these criteria before merge:</p>
+        <ul>
+          <li><strong>Playable end-to-end</strong> — the game must have a clear start, a win/lose/end condition, and a way to restart</li>
+          <li><strong>No console errors</strong> — open the browser console during a full playthrough; it must be clean</li>
+          <li><strong>Mobile-usable</strong> — the game does not need to be mobile-first, but it must not be broken on a phone screen</li>
+          <li><strong>Accessible thumbnail</strong> — the <code>thumbnail.png</code> must be a real screenshot at 16:9 ratio, minimum 800×450px</li>
+          <li><strong>Accurate manifest</strong> — the <code>game.json</code> description, rating, and tags must accurately reflect the actual game</li>
+          <li><strong>Readable code</strong> — reviewers will read your source. Variable names, structure, and comments should make intent clear</li>
+        </ul>
+      </section>
+
+      <section id="content-ratings" class="doc-section">
+        <h2>Content Ratings</h2>
+        <p>Every game must declare a content rating in <code>game.json</code>. Be honest — mislabelled ratings are grounds for immediate removal.</p>
+        <div class="rating-table">
+          <div class="rating-row">
+            <span class="rating-badge-e">E</span>
+            <div>
+              <strong>Everyone</strong>
+              <p>Suitable for all ages. No violence, no mature themes, no suggestive content. Abstract strategy, puzzles, and most chess variants will fall here.</p>
+            </div>
+          </div>
+          <div class="rating-row">
+            <span class="rating-badge-t">T</span>
+            <div>
+              <strong>Teen</strong>
+              <p>May contain mild violence, mild language, or themes not suitable for young children. Capture mechanics with graphic feedback, competitive taunting, or dark themes qualify.</p>
+            </div>
+          </div>
+          <div class="rating-row">
+            <span class="rating-badge-m">M</span>
+            <div>
+              <strong>Mature</strong>
+              <p>Contains content suitable for ages 17+. Strong violence, strong language, or adult themes. M-rated games are accepted but must be clearly labelled and will display a content warning on the game page.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="size-limits" class="doc-section">
+        <h2>Size Limits</h2>
+        <p>Keep your game folder lean. Large assets slow the platform for everyone.</p>
+        <div class="size-table">
+          <div class="size-row">
+            <span class="size-label">Total folder</span>
+            <span class="size-value">50 MB</span>
+            <span class="size-desc">Hard limit. PRs exceeding this will not be merged.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">thumbnail.png</span>
+            <span class="size-value">500 KB</span>
+            <span class="size-desc">Compress with <a href="https://squoosh.app" target="_blank" rel="noopener">Squoosh</a> or similar before committing.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">Single asset</span>
+            <span class="size-value">5 MB</span>
+            <span class="size-desc">No individual file should exceed 5 MB. Audio and video are discouraged — link externally if needed.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">Dependencies</span>
+            <span class="size-value">—</span>
+            <span class="size-desc">Do not commit <code>node_modules/</code>. Bundle your JS and commit the output. If you use a CDN, link it — don't copy the source into your folder.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="what-not-to-do" class="doc-section">
+        <h2>What Not To Do</h2>
+        <p>These are the most common reasons PRs get rejected or games get removed.</p>
+        <div class="dont-list">
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Modifying files outside your game folder.</strong> You own <code>/games/your-game-name/</code> and nothing else. Changes to <code>src/</code>, <code>public/</code>, config files, or any other game's folder will cause your PR to be closed immediately.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Committing changes to <code>games.registry.json</code>.</strong> The registry is managed by the maintainer. If your PR includes a registry change, it will be reverted before merge.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Pushing directly to <code>main</code>.</strong> All contributions go through a pull request. Direct pushes to main are blocked by branch protection.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Submitting a clone or tutorial project.</strong> Ports of existing games, Chess.com clones, and tutorial-following projects will not be accepted. The challenge requires original work.</p>
+          </div>
+          <div class="dont-item warning">
+            <span class="dont-label">Warning</span>
+            <p><strong>Missing required files.</strong> PRs missing <code>game.json</code>, <code>description.md</code>, <code>rules.md</code>, <code>thumbnail.png</code>, or <code>README.md</code> will be sent back with a checklist comment rather than closed outright.</p>
+          </div>
+          <div class="dont-item warning">
+            <span class="dont-label">Warning</span>
+            <p><strong>Non-conventional commits.</strong> PRs with messy commit histories will be asked to rebase and squash before merge. See <a href="#commit-standards">Commit Standards</a>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="submission" class="doc-section">
+        <h2>Submission</h2>
+        <p>When your game is ready, push your branch and open a pull request against <code>main</code> on GitHub.</p>
+        <pre><code>git push origin game/your-game-name</code></pre>
+        <p>In your PR description, include:</p>
+        <ul>
+          <li>A brief description of what your game is and how it works</li>
+          <li>A note on how it connects to chess</li>
+          <li>Any environment variables the platform maintainer needs to set</li>
+          <li>Any known issues or limitations</li>
+        </ul>
+        <p>A maintainer will review your PR. Feedback will be left as review comments. Address each comment and push new commits — do not force-push during review as it makes it hard to track changes.</p>
+        <div class="info-box">Review turnaround is typically within a week. If your PR has been open for more than two weeks with no response, ping in the GitHub discussion.</div>
+      </section>
+
+      <section id="updates" class="doc-section">
+        <h2>Updating Your Game</h2>
+        <p>After your game is live, updates follow the same process: branch, change, PR. A few additional rules apply:</p>
+        <ul>
+          <li>Increment the <code>version</code> field in <code>game.json</code> following semver — patch for bug fixes, minor for new features</li>
+          <li>Add a new entry to the <code>changelog</code> array describing what changed</li>
+          <li>Do not change your game's folder name — it is part of the public URL and changing it would break existing links</li>
+        </ul>
+        <p>Breaking changes — anything that resets player progress or significantly alters the rules — should be noted prominently in the changelog entry and in your PR description.</p>
+      </section>
+
+      <section id="removal" class="doc-section">
+        <h2>Game Removal</h2>
+        <p>Games can be removed in two ways:</p>
+        <ul>
+          <li><strong>Voluntary:</strong> Open a PR that removes your game folder and sets a note in the PR description. The maintainer will handle the registry update.</li>
+          <li><strong>Involuntary:</strong> Games that violate content standards, contain malicious code, or have been abandoned and broken for more than 90 days may be removed by the maintainer without notice.</li>
+        </ul>
+        <p>If your game is removed involuntarily, you will be notified via a GitHub issue on your PR with the reason.</p>
+      </section>
+
+      <section id="ssr-apis" class="doc-section">
+        <h2>SSR APIs</h2>
+        <p>The platform exposes a small set of server-side utilities available to all games via import. These are provided by the platform and should not be reimplemented in your game folder.</p>
+
+        <h3>Reading the game registry</h3>
+        <pre><code>import { getRegistry } from '@/lib/registry';
+
+const games = await getRegistry();
+// returns: string[] of registered game folder names</code></pre>
+
+        <h3>Reading a game manifest</h3>
+        <pre><code>import { getManifest } from '@/lib/registry';
+
+const manifest = await getManifest('pawn-push');
+// returns: parsed game.json object, or null if not found</code></pre>
+
+        <h3>Reading markdown content</h3>
+        <pre><code>import { getGameContent } from '@/lib/content';
+
+const description = await getGameContent('pawn-push', 'description');
+const rules = await getGameContent('pawn-push', 'rules');
+// returns: rendered HTML string from the markdown file</code></pre>
+
+        <div class="info-box">These APIs are only available in <code>.astro</code> files and server-side <code>.ts</code> endpoint files. They cannot be called from client-side scripts. If you need game data on the client, fetch it from one of your own API routes.</div>
+      </section>
 
     </article>
   </div>
 </Base>
 
 <style>
-  /* Your existing styles remain unchanged */
   .docs-layout {
     display: grid;
     grid-template-columns: 220px 1fr;
