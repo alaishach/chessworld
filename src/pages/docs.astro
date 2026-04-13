@@ -76,7 +76,7 @@ import Base from '../layouts/Base.astro';
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Clone the repo</h4>
-              <pre><code>git clone https://github.com/alaishach/game.chessworld.git
+              <pre is:raw><code>git clone https://github.com/alaishach/game.chessworld.git
 cd game.chessworld</code></pre>
             </div>
           </div>
@@ -85,7 +85,7 @@ cd game.chessworld</code></pre>
             <div class="step-body">
               <h4>Create your branch</h4>
               <p>Always create a branch named after your game. Never commit directly to <code>main</code>.</p>
-              <pre><code>git checkout -b game/your-game-name</code></pre>
+              <pre is:raw><code>git checkout -b game/your-game-name</code></pre>
             </div>
           </div>
           <div class="step">
@@ -93,7 +93,7 @@ cd game.chessworld</code></pre>
             <div class="step-body">
               <h4>Create your game folder</h4>
               <p>All game files live inside <code>/games/your-game-name/</code>. The folder name must match your branch name exactly.</p>
-              <pre><code>mkdir games/your-game-name</code></pre>
+              <pre is:raw><code>mkdir games/your-game-name</code></pre>
             </div>
           </div>
           <div class="step">
@@ -108,7 +108,7 @@ cd game.chessworld</code></pre>
             <div class="step-body">
               <h4>Test locally</h4>
               <p>Temporarily add your game folder name to <code>games.registry.json</code> and run the dev server. <strong>Do not commit this change.</strong> Revert it before pushing.</p>
-              <pre><code>npm install
+              <pre is:raw><code>npm install
 npm run dev</code></pre>
             </div>
           </div>
@@ -125,7 +125,7 @@ npm run dev</code></pre>
       <section id="file-structure" class="doc-section">
         <h2>File Structure</h2>
         <p>Your game folder is entirely self-contained. Files marked <span class="req-marker">required</span> must be present for your PR to be accepted.</p>
-        <pre><code>games/
+        <pre is:raw><code>games/
 └── your-game-name/
     ├── game.json          ← platform manifest (required)
     ├── description.md     ← shown above the game iframe (required)
@@ -144,7 +144,7 @@ npm run dev</code></pre>
       <section id="manifest" class="doc-section">
         <h2>game.json Manifest</h2>
         <p>Every game requires a <code>game.json</code> file. This is how the platform discovers, displays, and validates your game.</p>
-        <pre><code>{
+        <pre is:raw><code>{
   "title": "Your Game Title",
   "description": "A short 1-2 sentence description for the games listing page.",
   "author": "your-github-username",
@@ -183,14 +183,14 @@ npm run dev</code></pre>
         <p>Two markdown files are required in every game folder. They are parsed by the platform and rendered automatically on your game's page.</p>
 
         <h3>description.md — rendered above the iframe</h3>
-        <pre><code># Your Game Title
+        <pre is:raw><code># Your Game Title
 
 A paragraph describing what your game is and why it's worth playing.
 
 You can use multiple paragraphs, **bold**, *italics*, and inline `code`.</code></pre>
 
         <h3>rules.md — rendered below the iframe</h3>
-        <pre><code>## Rules
+        <pre is:raw><code>## Rules
 
 - Rule one
 - Rule two
@@ -210,11 +210,11 @@ You can use multiple paragraphs, **bold**, *italics*, and inline `code`.</code><
       <section id="api-routes" class="doc-section">
         <h2>API Routes</h2>
         <p>Because the platform runs on Astro SSR, your game can include server-side API routes. Place them inside your game folder under an <code>api/</code> subdirectory and they will be mounted automatically.</p>
-        <pre><code>games/your-game-name/
+        <pre is:raw><code>games/your-game-name/
 └── api/
     └── score.ts</code></pre>
         <p>API routes must export a handler function using Astro's standard endpoint format:</p>
-        <pre><code>import type { APIRoute } from 'astro';
+        <pre is:raw><code>import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
@@ -242,7 +242,7 @@ export const POST: APIRoute = async ({ request }) => {
       <section id="commit-standards" class="doc-section">
         <h2>Commit Standards</h2>
         <p>All commits must follow the <a href="https://www.conventionalcommits.org" target="_blank" rel="noopener">Conventional Commits</a> format. PRs with non-conforming commit histories will be asked to rebase before merge.</p>
-        <pre><code>type(scope): short description
+        <pre is:raw><code>type(scope): short description
 
 # Examples
 feat(pawn-push): add difficulty selector
@@ -364,7 +364,7 @@ chore(pawn-push): update game.json version to 1.1.0</code></pre>
       <section id="submission" class="doc-section">
         <h2>Submission</h2>
         <p>When your game is ready, push your branch and open a pull request against <code>main</code> on GitHub.</p>
-        <pre><code>git push origin game/your-game-name</code></pre>
+        <pre is:raw><code>git push origin game/your-game-name</code></pre>
         <p>In your PR description, include:</p>
         <ul>
           <li>A brief description of what your game is and how it works</li>
@@ -402,19 +402,19 @@ chore(pawn-push): update game.json version to 1.1.0</code></pre>
         <p>The platform exposes a small set of server-side utilities available to all games via import. These are provided by the platform and should not be reimplemented in your game folder.</p>
 
         <h3>Reading the game registry</h3>
-        <pre><code>import { getRegistry } from '@/lib/registry';
+        <pre is:raw><code>import { getRegistry } from '@/lib/registry';
 
 const games = await getRegistry();
 // returns: string[] of registered game folder names</code></pre>
 
         <h3>Reading a game manifest</h3>
-        <pre><code>import { getManifest } from '@/lib/registry';
+        <pre is:raw><code>import { getManifest } from '@/lib/registry';
 
 const manifest = await getManifest('pawn-push');
 // returns: parsed game.json object, or null if not found</code></pre>
 
         <h3>Reading markdown content</h3>
-        <pre><code>import { getGameContent } from '@/lib/content';
+        <pre is:raw><code>import { getGameContent } from '@/lib/content';
 
 const description = await getGameContent('pawn-push', 'description');
 const rules = await getGameContent('pawn-push', 'rules');
