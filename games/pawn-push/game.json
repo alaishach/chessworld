@@ -1,0 +1,18 @@
+{
+  "title": "Pawn Push",
+  "description": "Push your pawns to the other side of the board before your opponent does. Simple rules, tense decisions.",
+  "author": "zenith-dev",
+  "version": "1.0.0",
+  "thumbnail": "thumbnail.png",
+  "entry": "index.html",
+  "tags": ["strategy", "2-player", "turn-based"],
+  "rating": "E",
+  "chessRelation": "Uses chess pawns and pawn movement rules — forward only, diagonal capture — on a stripped-down board.",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-04-12",
+      "notes": "Initial release. 6x6 board, two-player local, diagonal capture, win detection."
+    }
+  ]
+}

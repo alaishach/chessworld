@@ -1,0 +1,209 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'CHESSWORLD.GAMES', description = 'A platform for chess-inspired browser games.' } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { href: '/games', label: 'Games' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/about', label: 'About' },
+  { href: '/join', label: 'Join' },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title === 'CHESSWORLD.GAMES' ? title : `${title} — CHESSWORLD.GAMES`}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="/" class="nav-brand">CHESSWORLD.GAMES</a>
+      <ul class="nav-links">
+        {navLinks.map(link => (
+          <li>
+            <a
+              href={link.href}
+              class:list={['nav-link', { active: currentPath.startsWith(link.href) }]}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <slot />
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">CHESSWORLD.GAMES</span>
+      <span class="footer-text">A Zenith Project</span>
+      <a href="https://github.com/alaishach/game.chessworld" target="_blank" rel="noopener" class="footer-link">
+        GitHub ↗
+      </a>
+    </div>
+  </footer>
+</body>
+</html>
+
+<style>
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  background: rgba(27, 38, 59, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(119, 141, 169, 0.15);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+.nav-brand:hover {
+  color: var(--color-accent);
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.nav-link {
+  display: block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.nav-link:hover,
+.nav-link.active {
+  color: var(--color-text-primary);
+  background: rgba(58, 134, 255, 0.12);
+}
+.nav-link.active {
+  color: var(--color-primary);
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--color-text-secondary);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.footer {
+  border-top: 1px solid rgba(119, 141, 169, 0.15);
+  padding: 1.5rem 0;
+  margin-top: 6rem;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-primary);
+}
+
+.footer-text {
+  color: var(--color-border);
+  font-size: 0.85rem;
+}
+
+.footer-link {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--color-border);
+  transition: color 0.2s;
+}
+.footer-link:hover {
+  color: var(--color-secondary);
+}
+
+@media (max-width: 640px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    background: var(--color-bg-main);
+    border-bottom: 1px solid rgba(119, 141, 169, 0.15);
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .nav-links.open {
+    display: flex;
+  }
+  .nav-toggle {
+    display: flex;
+  }
+}
+</style>
+
+<script>
+const toggle = document.getElementById('navToggle');
+const links = document.querySelector('.nav-links');
+toggle?.addEventListener('click', () => {
+  links?.classList.toggle('open');
+});
+</script>
