@@ -1,0 +1,638 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Docs" description="How to build and submit a game to CHESSWORLD.GAMES">
+  <div class="container docs-layout">
+    <aside class="docs-sidebar">
+      <nav class="sidebar-nav">
+        <p class="sidebar-label">Getting Started</p>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#the-challenge">The Challenge</a></li>
+        </ul>
+        <p class="sidebar-label">Building a Game</p>
+        <ul>
+          <li><a href="#adding-a-game">Adding a Game</a></li>
+          <li><a href="#file-structure">File Structure</a></li>
+          <li><a href="#manifest">game.json Manifest</a></li>
+          <li><a href="#markdown-files">Markdown Files</a></li>
+          <li><a href="#api-routes">API Routes</a></li>
+          <li><a href="#database">Database Options</a></li>
+        </ul>
+        <p class="sidebar-label">Standards</p>
+        <ul>
+          <li><a href="#commit-standards">Commit Standards</a></li>
+          <li><a href="#quality-standards">Quality Standards</a></li>
+          <li><a href="#content-ratings">Content Ratings</a></li>
+          <li><a href="#size-limits">Size Limits</a></li>
+          <li><a href="#what-not-to-do">What Not To Do</a></li>
+        </ul>
+        <p class="sidebar-label">Submitting</p>
+        <ul>
+          <li><a href="#submission">Submission</a></li>
+          <li><a href="#updates">Updating Your Game</a></li>
+          <li><a href="#removal">Game Removal</a></li>
+        </ul>
+        <p class="sidebar-label">Platform APIs</p>
+        <ul>
+          <li><a href="#ssr-apis">SSR APIs</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <article class="docs-content">
+      <div class="page-header" style="padding-top:3rem">
+        <h1>DOCS</h1>
+        <p>Everything you need to build and submit a game to CHESSWORLD.GAMES.</p>
+      </div>
+
+      <section id="overview" class="doc-section">
+        <h2>Overview</h2>
+        <p>CHESSWORLD.GAMES is a browser-based game platform built by the Zenith chess engine team. It exists as both a creative outlet and an entry point for new contributors — if you want to join the team, building a game here is your first step.</p>
+        <p>The platform is intentionally modular. You build your game in an isolated directory, use whatever technology stack you prefer, and submit it for review. You never need to touch the core website code.</p>
+      </section>
+
+      <section id="the-challenge" class="doc-section">
+        <h2>The Challenge</h2>
+        <p>Before joining the Zenith team, every developer completes one challenge:</p>
+        <blockquote><strong>Create your own mini game.</strong> Not a clone. Not a tutorial project. <em>Your game. Your rules. Your idea.</em></blockquote>
+        <p>Your game must:</p>
+        <ul>
+          <li>Have a clear set of rules</li>
+          <li>Be playable (even if simple)</li>
+          <li>Demonstrate your approach to logic and structure</li>
+          <li>Be related to chess in some way</li>
+        </ul>
+        <p>There are no restrictions on genre, complexity, or language/framework — as long as it runs in a browser and integrates with the platform structure described below.</p>
+        <p>We're not judging polish. We're looking for <strong>clarity of thought</strong>, <strong>code structure</strong>, <strong>documentation practices</strong>, <strong>problem-solving approach</strong>, and <strong>creativity</strong>.</p>
+      </section>
+
+      <section id="adding-a-game" class="doc-section">
+        <h2>Adding a Game</h2>
+        <p>Adding your game requires zero modifications to the core site. Here is the full process:</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Clone the repo</h4>
+              <pre><code>git clone https://github.com/alaishach/game.chessworld.git
+cd game.chessworld</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Create your branch</h4>
+              <p>Always create a branch named after your game. Never commit directly to <code>main</code>.</p>
+              <pre><code>git checkout -b game/your-game-name</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Create your game folder</h4>
+              <p>All game files live inside <code>/games/your-game-name/</code>. The folder name must match your branch name exactly.</p>
+              <pre><code>mkdir games/your-game-name</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Add your required files</h4>
+              <p>Your folder must include: <code>game.json</code>, <code>description.md</code>, <code>rules.md</code>, <code>thumbnail.png</code>, and <code>README.md</code>. PRs missing any of these will be sent back.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <h4>Test locally</h4>
+              <p>Temporarily add your game folder name to <code>games.registry.json</code> and run the dev server. <strong>Do not commit this change.</strong> Revert it before pushing.</p>
+              <pre><code>npm install
+npm run dev</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">6</div>
+            <div class="step-body">
+              <h4>Open a Pull Request</h4>
+              <p>Push your branch and open a PR on GitHub. A maintainer will review your code. If approved, it gets merged to <code>main</code> and added to the registry when it goes live.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="file-structure" class="doc-section">
+        <h2>File Structure</h2>
+        <p>Your game folder is entirely self-contained. Files marked <span class="req-marker">required</span> must be present for your PR to be accepted.</p>
+        <pre><code>games/
+└── your-game-name/
+    ├── game.json          ← platform manifest (required)
+    ├── description.md     ← shown above the game iframe (required)
+    ├── rules.md           ← shown below the game iframe (required)
+    ├── thumbnail.png      ← 16:9 preview screenshot (required)
+    ├── README.md          ← dev notes for reviewers (required)
+    ├── index.html         ← your game entry point
+    ├── src/
+    │   ├── main.js
+    │   └── style.css
+    └── assets/</code></pre>
+        <p>If you use a build step, include build instructions in your <code>README.md</code> and commit the built output. Your final output must be servable as static files.</p>
+        <div class="info-box"><strong>File naming is enforced.</strong> Markdown files must be named exactly <code>description.md</code> and <code>rules.md</code>. Any other filename will be ignored.</div>
+      </section>
+
+      <section id="manifest" class="doc-section">
+        <h2>game.json Manifest</h2>
+        <p>Every game requires a <code>game.json</code> file. This is how the platform discovers, displays, and validates your game.</p>
+        <pre><code>{
+  "title": "Your Game Title",
+  "description": "A short 1-2 sentence description for the games listing page.",
+  "author": "your-github-username",
+  "version": "1.0.0",
+  "thumbnail": "thumbnail.png",
+  "entry": "index.html",
+  "tags": ["strategy", "singleplayer"],
+  "rating": "E",
+  "chessRelation": "One sentence on how your game connects to chess.",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-04-01",
+      "notes": "Initial release."
+    }
+  ]
+}</code></pre>
+
+        <div class="field-table">
+          <div class="field-row header"><span>Field</span><span>Required</span><span>Description</span></div>
+          <div class="field-row"><code>title</code><span class="req">Yes</span><span>Display name of your game</span></div>
+          <div class="field-row"><code>description</code><span class="req">Yes</span><span>Short description shown on the games listing page (1–2 sentences)</span></div>
+          <div class="field-row"><code>author</code><span class="req">Yes</span><span>Your GitHub username — links to your GitHub profile on the game page</span></div>
+          <div class="field-row"><code>version</code><span class="req">Yes</span><span>Semantic version. Start at <code>1.0.0</code> and increment on each approved update</span></div>
+          <div class="field-row"><code>thumbnail</code><span class="req">Yes</span><span>Preview image filename relative to your game folder. 16:9 ratio required</span></div>
+          <div class="field-row"><code>entry</code><span class="req">Yes</span><span>Your game's entry point file (usually <code>index.html</code>)</span></div>
+          <div class="field-row"><code>tags</code><span class="req">Yes</span><span>Array of descriptive tags e.g. <code>"strategy"</code>, <code>"2-player"</code>, <code>"puzzle"</code></span></div>
+          <div class="field-row"><code>rating</code><span class="req">Yes</span><span><code>"E"</code> (Everyone), <code>"T"</code> (Teen), or <code>"M"</code> (Mature). See <a href="#content-ratings">Content Ratings</a></span></div>
+          <div class="field-row"><code>chessRelation</code><span class="opt">No</span><span>One sentence explaining how your game connects to chess</span></div>
+          <div class="field-row"><code>changelog</code><span class="req">Yes</span><span>Array of version entries. Must have at least one. Each entry requires <code>version</code>, <code>date</code> (YYYY-MM-DD), and <code>notes</code></span></div>
+        </div>
+      </section>
+
+      <section id="markdown-files" class="doc-section">
+        <h2>Markdown Files</h2>
+        <p>Two markdown files are required in every game folder. They are parsed by the platform and rendered automatically on your game's page.</p>
+
+        <h3>description.md — rendered above the iframe</h3>
+        <pre><code># Your Game Title
+
+A paragraph describing what your game is and why it's worth playing.
+
+You can use multiple paragraphs, **bold**, *italics*, and inline `code`.</code></pre>
+
+        <h3>rules.md — rendered below the iframe</h3>
+        <pre><code>## Rules
+
+- Rule one
+- Rule two
+- Rule three
+
+## Controls
+
+| Action | How |
+|--------|-----|
+| Select | Click a piece |
+| Move   | Click a valid square |
+| Restart| Click the Restart button |</code></pre>
+
+        <div class="info-box">Both files are <strong>required</strong>. The platform supports: headings, bold, italic, inline code, unordered/ordered lists, tables, and horizontal rules.</div>
+      </section>
+
+      <section id="api-routes" class="doc-section">
+        <h2>API Routes</h2>
+        <p>Because the platform runs on Astro SSR, your game can include server-side API routes. Place them inside your game folder under an <code>api/</code> subdirectory and they will be mounted automatically.</p>
+        <pre><code>games/your-game-name/
+└── api/
+    └── score.ts</code></pre>
+        <p>API routes must export a handler function using Astro's standard endpoint format:</p>
+        <pre><code>import type { APIRoute } from 'astro';
+
+export const POST: APIRoute = async ({ request }) => {
+  const body = await request.json();
+  // your logic here
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};</code></pre>
+        <div class="info-box"><strong>Scope your routes carefully.</strong> Your API routes share a namespace with the rest of the platform. Prefix all route filenames with your game name to avoid conflicts — e.g. <code>your-game-name-score.ts</code>, not just <code>score.ts</code>.</div>
+      </section>
+
+      <section id="database" class="doc-section">
+        <h2>Database Options</h2>
+        <p>Games that need to persist data (leaderboards, saved states, etc.) are responsible for their own storage. The platform does not provide a shared database.</p>
+        <p>Recommended options that work well on Netlify edge/functions:</p>
+        <ul>
+          <li><strong>Upstash Redis</strong> — serverless Redis, free tier available, ideal for leaderboards and counters</li>
+          <li><strong>PlanetScale / Turso</strong> — serverless MySQL/SQLite, good for relational data</li>
+          <li><strong>Supabase</strong> — Postgres with a generous free tier and a simple REST API</li>
+          <li><strong>localStorage</strong> — for single-player games where data only needs to persist per browser</li>
+        </ul>
+        <div class="info-box warn"><strong>Do not hardcode credentials.</strong> Store API keys and connection strings in environment variables. Document the variable names your game needs in your <code>README.md</code>. The platform maintainer will add them to Netlify before your game goes live.</div>
+      </section>
+
+      <section id="commit-standards" class="doc-section">
+        <h2>Commit Standards</h2>
+        <p>All commits must follow the <a href="https://www.conventionalcommits.org" target="_blank" rel="noopener">Conventional Commits</a> format. PRs with non-conforming commit histories will be asked to rebase before merge.</p>
+        <pre><code>type(scope): short description
+
+# Examples
+feat(pawn-push): add difficulty selector
+fix(pawn-push): correct pawn promotion logic
+docs(pawn-push): update rules.md controls table
+style(pawn-push): adjust board colour contrast
+refactor(pawn-push): extract move validation to helper
+chore(pawn-push): update game.json version to 1.1.0</code></pre>
+        <div class="commit-types">
+          <div class="commit-type"><code>feat</code><span>A new feature or mechanic</span></div>
+          <div class="commit-type"><code>fix</code><span>A bug fix</span></div>
+          <div class="commit-type"><code>docs</code><span>Documentation changes only</span></div>
+          <div class="commit-type"><code>style</code><span>Visual/CSS changes with no logic change</span></div>
+          <div class="commit-type"><code>refactor</code><span>Code restructure with no behaviour change</span></div>
+          <div class="commit-type"><code>chore</code><span>Maintenance tasks (version bumps, asset updates)</span></div>
+        </div>
+        <p>The scope should always be your game folder name. Keep the subject line under 72 characters and written in the imperative mood ("add", "fix", "update" — not "added" or "fixes").</p>
+      </section>
+
+      <section id="quality-standards" class="doc-section">
+        <h2>Quality Standards</h2>
+        <p>There is no minimum complexity requirement, but every submission is reviewed against these criteria before merge:</p>
+        <ul>
+          <li><strong>Playable end-to-end</strong> — the game must have a clear start, a win/lose/end condition, and a way to restart</li>
+          <li><strong>No console errors</strong> — open the browser console during a full playthrough; it must be clean</li>
+          <li><strong>Mobile-usable</strong> — the game does not need to be mobile-first, but it must not be broken on a phone screen</li>
+          <li><strong>Accessible thumbnail</strong> — the <code>thumbnail.png</code> must be a real screenshot at 16:9 ratio, minimum 800×450px</li>
+          <li><strong>Accurate manifest</strong> — the <code>game.json</code> description, rating, and tags must accurately reflect the actual game</li>
+          <li><strong>Readable code</strong> — reviewers will read your source. Variable names, structure, and comments should make intent clear</li>
+        </ul>
+      </section>
+
+      <section id="content-ratings" class="doc-section">
+        <h2>Content Ratings</h2>
+        <p>Every game must declare a content rating in <code>game.json</code>. Be honest — mislabelled ratings are grounds for immediate removal.</p>
+        <div class="rating-table">
+          <div class="rating-row">
+            <span class="rating-badge-e">E</span>
+            <div>
+              <strong>Everyone</strong>
+              <p>Suitable for all ages. No violence, no mature themes, no suggestive content. Abstract strategy, puzzles, and most chess variants will fall here.</p>
+            </div>
+          </div>
+          <div class="rating-row">
+            <span class="rating-badge-t">T</span>
+            <div>
+              <strong>Teen</strong>
+              <p>May contain mild violence, mild language, or themes not suitable for young children. Capture mechanics with graphic feedback, competitive taunting, or dark themes qualify.</p>
+            </div>
+          </div>
+          <div class="rating-row">
+            <span class="rating-badge-m">M</span>
+            <div>
+              <strong>Mature</strong>
+              <p>Contains content suitable for ages 17+. Strong violence, strong language, or adult themes. M-rated games are accepted but must be clearly labelled and will display a content warning on the game page.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="size-limits" class="doc-section">
+        <h2>Size Limits</h2>
+        <p>Keep your game folder lean. Large assets slow the platform for everyone.</p>
+        <div class="size-table">
+          <div class="size-row">
+            <span class="size-label">Total folder</span>
+            <span class="size-value">50 MB</span>
+            <span class="size-desc">Hard limit. PRs exceeding this will not be merged.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">thumbnail.png</span>
+            <span class="size-value">500 KB</span>
+            <span class="size-desc">Compress with <a href="https://squoosh.app" target="_blank" rel="noopener">Squoosh</a> or similar before committing.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">Single asset</span>
+            <span class="size-value">5 MB</span>
+            <span class="size-desc">No individual file should exceed 5 MB. Audio and video are discouraged — link externally if needed.</span>
+          </div>
+          <div class="size-row">
+            <span class="size-label">Dependencies</span>
+            <span class="size-value">—</span>
+            <span class="size-desc">Do not commit <code>node_modules/</code>. Bundle your JS and commit the output. If you use a CDN, link it — don't copy the source into your folder.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="what-not-to-do" class="doc-section">
+        <h2>What Not To Do</h2>
+        <p>These are the most common reasons PRs get rejected or games get removed.</p>
+        <div class="dont-list">
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Modifying files outside your game folder.</strong> You own <code>/games/your-game-name/</code> and nothing else. Changes to <code>src/</code>, <code>public/</code>, config files, or any other game's folder will cause your PR to be closed immediately.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Committing changes to <code>games.registry.json</code>.</strong> The registry is managed by the maintainer. If your PR includes a registry change, it will be reverted before merge.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Pushing directly to <code>main</code>.</strong> All contributions go through a pull request. Direct pushes to main are blocked by branch protection.</p>
+          </div>
+          <div class="dont-item danger">
+            <span class="dont-label">Rejected</span>
+            <p><strong>Submitting a clone or tutorial project.</strong> Ports of existing games, Chess.com clones, and tutorial-following projects will not be accepted. The challenge requires original work.</p>
+          </div>
+          <div class="dont-item warning">
+            <span class="dont-label">Warning</span>
+            <p><strong>Missing required files.</strong> PRs missing <code>game.json</code>, <code>description.md</code>, <code>rules.md</code>, <code>thumbnail.png</code>, or <code>README.md</code> will be sent back with a checklist comment rather than closed outright.</p>
+          </div>
+          <div class="dont-item warning">
+            <span class="dont-label">Warning</span>
+            <p><strong>Non-conventional commits.</strong> PRs with messy commit histories will be asked to rebase and squash before merge. See <a href="#commit-standards">Commit Standards</a>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="submission" class="doc-section">
+        <h2>Submission</h2>
+        <p>When your game is ready, push your branch and open a pull request against <code>main</code> on GitHub.</p>
+        <pre><code>git push origin game/your-game-name</code></pre>
+        <p>In your PR description, include:</p>
+        <ul>
+          <li>A brief description of what your game is and how it works</li>
+          <li>A note on how it connects to chess</li>
+          <li>Any environment variables the platform maintainer needs to set</li>
+          <li>Any known issues or limitations</li>
+        </ul>
+        <p>A maintainer will review your PR. Feedback will be left as review comments. Address each comment and push new commits — do not force-push during review as it makes it hard to track changes.</p>
+        <div class="info-box">Review turnaround is typically within a week. If your PR has been open for more than two weeks with no response, ping in the GitHub discussion.</div>
+      </section>
+
+      <section id="updates" class="doc-section">
+        <h2>Updating Your Game</h2>
+        <p>After your game is live, updates follow the same process: branch, change, PR. A few additional rules apply:</p>
+        <ul>
+          <li>Increment the <code>version</code> field in <code>game.json</code> following semver — patch for bug fixes, minor for new features</li>
+          <li>Add a new entry to the <code>changelog</code> array describing what changed</li>
+          <li>Do not change your game's folder name — it is part of the public URL and changing it would break existing links</li>
+        </ul>
+        <p>Breaking changes — anything that resets player progress or significantly alters the rules — should be noted prominently in the changelog entry and in your PR description.</p>
+      </section>
+
+      <section id="removal" class="doc-section">
+        <h2>Game Removal</h2>
+        <p>Games can be removed in two ways:</p>
+        <ul>
+          <li><strong>Voluntary:</strong> Open a PR that removes your game folder and sets a note in the PR description. The maintainer will handle the registry update.</li>
+          <li><strong>Involuntary:</strong> Games that violate content standards, contain malicious code, or have been abandoned and broken for more than 90 days may be removed by the maintainer without notice.</li>
+        </ul>
+        <p>If your game is removed involuntarily, you will be notified via a GitHub issue on your PR with the reason.</p>
+      </section>
+
+      <section id="ssr-apis" class="doc-section">
+        <h2>SSR APIs</h2>
+        <p>The platform exposes a small set of server-side utilities available to all games via import. These are provided by the platform and should not be reimplemented in your game folder.</p>
+
+        <h3>Reading the game registry</h3>
+        <pre><code>import { getRegistry } from '@/lib/registry';
+
+const games = await getRegistry();
+// returns: string[] of registered game folder names</code></pre>
+
+        <h3>Reading a game manifest</h3>
+        <pre><code>import { getManifest } from '@/lib/registry';
+
+const manifest = await getManifest('pawn-push');
+// returns: parsed game.json object, or null if not found</code></pre>
+
+        <h3>Reading markdown content</h3>
+        <pre><code>import { getGameContent } from '@/lib/content';
+
+const description = await getGameContent('pawn-push', 'description');
+const rules = await getGameContent('pawn-push', 'rules');
+// returns: rendered HTML string from the markdown file</code></pre>
+
+        <div class="info-box">These APIs are only available in <code>.astro</code> files and server-side <code>.ts</code> endpoint files. They cannot be called from client-side scripts. If you need game data on the client, fetch it from one of your own API routes.</div>
+      </section>
+
+    </article>
+  </div>
+</Base>
+
+<style>
+  .docs-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 4rem;
+    align-items: start;
+    padding-bottom: 6rem;
+  }
+
+.docs-sidebar {
+  position: sticky;
+  top: calc(var(--nav-height) + 2rem);
+}
+
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-border);
+  margin: 1.25rem 0 0.4rem;
+  padding-left: 0.75rem;
+}
+.sidebar-label:first-child { margin-top: 0; }
+
+.sidebar-nav ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-nav a {
+  display: block;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  border-radius: 5px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+}
+.sidebar-nav a:hover {
+  color: var(--color-text-primary);
+  background: rgba(58, 134, 255, 0.08);
+  border-left-color: var(--color-primary);
+}
+
+.docs-content { min-width: 0; }
+
+.doc-section {
+  margin-bottom: 4rem;
+  scroll-margin-top: calc(var(--nav-height) + 1rem);
+}
+
+.doc-section h2 {
+  font-size: 2rem;
+  color: var(--color-text-primary);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(119, 141, 169, 0.2);
+}
+
+.doc-section h3 {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin: 1.5rem 0 0.75rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.doc-section h4 { font-size: 1rem; color: var(--color-text-primary); margin-bottom: 0.5rem; }
+
+.doc-section p { color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 1rem; }
+
+.doc-section ul, .doc-section ol {
+  color: var(--color-text-secondary);
+  padding-left: 1.5rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.doc-section li { margin-bottom: 0.4rem; }
+
+blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding: 1rem 1.25rem;
+  background: rgba(255, 209, 102, 0.06);
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+  color: var(--color-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.info-box {
+  background: rgba(58, 134, 255, 0.07);
+  border: 1px solid rgba(58, 134, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 1.25rem 0;
+}
+.info-box strong { color: var(--color-text-primary); }
+.info-box.warn { background: rgba(255,209,102,0.06); border-color: rgba(255,209,102,0.2); }
+
+.req-marker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-danger);
+  background: rgba(255,107,107,0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid rgba(255,107,107,0.2);
+}
+
+.steps { display: flex; flex-direction: column; gap: 1.5rem; margin: 1.5rem 0; }
+.step { display: flex; gap: 1.25rem; align-items: flex-start; }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500;
+  flex-shrink: 0; margin-top: 2px;
+}
+.step-body { flex: 1; }
+.step-body p { margin-bottom: 0.75rem; }
+.step-body pre { margin-top: 0.5rem; }
+
+.field-table { margin: 1.5rem 0; border: 1px solid rgba(119,141,169,0.2); border-radius: 8px; overflow: hidden; }
+.field-row {
+  display: grid; grid-template-columns: 140px 70px 1fr;
+  gap: 1rem; padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(119,141,169,0.1);
+  font-size: 0.875rem; align-items: start;
+}
+.field-row:last-child { border-bottom: none; }
+.field-row.header {
+  background: rgba(65,90,119,0.3);
+  font-weight: 600; font-family: var(--font-mono);
+  font-size: 0.75rem; color: var(--color-border);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.field-row span { color: var(--color-text-secondary); }
+.req { color: var(--color-danger) !important; font-family: var(--font-mono); font-size: 0.75rem !important; }
+.opt { color: var(--color-border) !important; font-family: var(--font-mono); font-size: 0.75rem !important; }
+
+.commit-types { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+.commit-type { display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; }
+.commit-type code { min-width: 80px; }
+.commit-type span { color: var(--color-text-secondary); }
+
+.rating-table { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+.rating-row {
+  display: flex; gap: 1.25rem; align-items: flex-start;
+  padding: 1rem 1.1rem; border-radius: 8px;
+  border: 1px solid rgba(119,141,169,0.15);
+  background: rgba(65,90,119,0.12);
+}
+.rating-row strong { display: block; color: var(--color-text-primary); font-size: 0.95rem; margin-bottom: 0.3rem; }
+.rating-row p { color: var(--color-text-secondary); font-size: 0.875rem; line-height: 1.55; margin: 0; }
+
+.rating-badge-e, .rating-badge-t, .rating-badge-m {
+  font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+  padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid;
+  letter-spacing: 0.04em; flex-shrink: 0; margin-top: 2px; height: fit-content;
+}
+.rating-badge-e { background: rgba(128,237,153,0.15); color: #80ED99; border-color: rgba(128,237,153,0.3); }
+.rating-badge-t { background: rgba(255,209,102,0.15); color: #FFD166; border-color: rgba(255,209,102,0.3); }
+.rating-badge-m { background: rgba(255,107,107,0.15); color: #FF6B6B; border-color: rgba(255,107,107,0.3); }
+
+.size-table { display: flex; flex-direction: column; border: 1px solid rgba(119,141,169,0.2); border-radius: 8px; overflow: hidden; margin: 1.5rem 0; }
+.size-row {
+  display: grid; grid-template-columns: 120px 80px 1fr;
+  gap: 1rem; padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(119,141,169,0.1);
+  align-items: center; font-size: 0.875rem;
+}
+.size-row:last-child { border-bottom: none; }
+.size-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-border); }
+.size-value { font-family: var(--font-mono); font-size: 0.95rem; color: var(--color-text-primary); font-weight: 600; }
+.size-desc { color: var(--color-text-secondary); line-height: 1.5; }
+
+.dont-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+.dont-item { display: flex; gap: 1rem; padding: 1rem 1.25rem; border-radius: 8px; align-items: flex-start; }
+.dont-item.danger { background: rgba(255,107,107,0.07); border: 1px solid rgba(255,107,107,0.2); }
+.dont-item.warning { background: rgba(255,209,102,0.06); border: 1px solid rgba(255,209,102,0.15); }
+.dont-label {
+  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem; border-radius: 4px;
+  flex-shrink: 0; margin-top: 2px; height: fit-content;
+}
+.dont-item.danger .dont-label { background: rgba(255,107,107,0.15); color: var(--color-danger); }
+.dont-item.warning .dont-label { background: rgba(255,209,102,0.12); color: var(--color-accent); }
+.dont-item p { margin-bottom: 0; font-size: 0.9rem; }
+
+@media (max-width: 768px) {
+  .docs-layout { grid-template-columns: 1fr; }
+  .docs-sidebar { position: static; border-bottom: 1px solid rgba(119,141,169,0.2); padding-bottom: 1.5rem; }
+  .sidebar-nav ul { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
+  .field-row { grid-template-columns: 1fr; gap: 0.25rem; }
+  .field-row.header { display: none; }
+  .size-row { grid-template-columns: 1fr 1fr; }
+  .size-desc { grid-column: 1 / -1; }
+}
+</style>
+
