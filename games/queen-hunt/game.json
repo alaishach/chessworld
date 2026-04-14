@@ -1,0 +1,18 @@
+{
+  "title": "Queen Hunt",
+  "description": "Classic chess with one twist: the game is won by capturing the opponent’s queen instead of checkmate.",
+  "author": "your-github-username",
+  "version": "1.0.0",
+  "thumbnail": "thumbnail.png",
+  "entry": "index.html",
+  "tags": ["strategy", "chess", "2-player"],
+  "rating": "E",
+  "chessRelation": "Standard chess rules apply, but victory is achieved by capturing the opponent's queen instead of checkmate.",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-04-13",
+      "notes": "Initial release."
+    }
+  ]
+}

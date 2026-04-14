@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bishop Maze</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #12112A;
+      --surface:     #1E1D3F;
+      --surface2:    #2A2850;
+      --primary:     #6C63FF;
+      --accent:      #FFB830;
+      --danger:      #FF6B8A;
+      --success:     #2EC4B6;
+      --text:        #F0EFFF;
+      --text-dim:    #C4C2E8;
+      --border:      rgba(108,99,255,0.25);
+      --light-cell:  #2A2850;
+      --dark-cell:   #1A1938;
+      --wall:        #090817;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .game-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+      width: 100%;
+      max-width: 480px;
+      padding: 1rem;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .title span { color: var(--accent); }
+
+    .stats {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .stat-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .level-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    .level-track {
+      flex: 1;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+    }
+
+    .level-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .board-wrap { position: relative; width: 100%; }
+
+    .board {
+      display: grid;
+      width: 100%;
+      aspect-ratio: 1;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(108,99,255,0.12);
+    }
+
+    .cell {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.1s;
+    }
+
+    .cell.light { background: var(--light-cell); }
+    .cell.dark  { background: var(--dark-cell); }
+
+    .cell.wall {
+      background: var(--wall);
+      cursor: default;
+    }
+    .cell.wall::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 4px,
+        rgba(108,99,255,0.05) 4px, rgba(108,99,255,0.05) 8px
+      );
+    }
+
+    .cell.valid-move::before {
+      content: '';
+      position: absolute;
+      inset: 22%;
+      border-radius: 50%;
+      background: rgba(108,99,255,0.3);
+      border: 2px solid var(--primary);
+      z-index: 1;
+    }
+
+    .cell.trail::after {
+      content: '';
+      position: absolute;
+      inset: 38%;
+      border-radius: 50%;
+      background: rgba(108,99,255,0.18);
+      z-index: 0;
+    }
+
+    .cell.goal { animation: glow 1.6s ease-in-out infinite; }
+    @keyframes glow {
+      0%,100% { filter: brightness(1); }
+      50%      { filter: brightness(1.5); }
+    }
+
+    .piece {
+      position: absolute;
+      inset: 7%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .goal-marker {
+      position: absolute;
+      inset: 10%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .status {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    .btn-row { display: flex; gap: 0.6rem; }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0.35rem 0.9rem;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18,17,42,0.93);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .overlay.visible { opacity: 1; pointer-events: all; }
+
+    .overlay-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .overlay-sub {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 220px;
+      line-height: 1.5;
+    }
+    .overlay-btn {
+      margin-top: 0.5rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.55rem 1.5rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .overlay-btn:hover { opacity: 0.85; }
+
+    .win  { color: var(--accent); }
+    .fail { color: var(--danger); }
+  </style>
+</head>
+<body>
+<div class="game-wrap">
+  <div class="header">
+    <div class="title">Bishop<span>.</span>Maze</div>
+    <div class="stats">
+      <div class="stat"><span class="stat-val" id="movesVal">0</span>Moves</div>
+      <div class="stat"><span class="stat-val" id="parVal">—</span>Par</div>
+      <div class="stat"><span class="stat-val" id="levelVal">1</span>Level</div>
+    </div>
+  </div>
+
+  <div class="level-bar">
+    <span id="levelLabel">Level 1</span>
+    <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+    <span>10</span>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+    <div class="overlay" id="overlay">
+      <div class="overlay-title" id="overlayTitle"></div>
+      <div class="overlay-sub"  id="overlaySub"></div>
+      <button class="overlay-btn" id="overlayBtn">Next Level</button>
+    </div>
+  </div>
+
+  <div class="status" id="status">Move the bishop diagonally to reach the ★ goal</div>
+  <div class="btn-row">
+    <button class="btn" id="btnRestart">↺ Restart</button>
+    <button class="btn" id="btnSkip">Skip →</button>
+  </div>
+</div>
+
+<script>
+const TOTAL = 10;
+const LEVELS = [
+  { size:5, walls:[],                                                                          start:[4,0], goal:[0,4], par:4  },
+  { size:5, walls:[[2,2],[2,3],[3,2]],                                                         start:[4,0], goal:[0,4], par:6  },
+  { size:6, walls:[[1,1],[1,2],[1,3],[2,4],[3,1],[4,2],[4,3]],                                start:[5,0], goal:[0,5], par:7  },
+  { size:6, walls:[[0,2],[0,3],[1,1],[2,4],[3,0],[3,5],[4,2],[4,3]],                          start:[5,1], goal:[0,4], par:8  },
+  { size:7, walls:[[1,2],[1,3],[1,4],[2,1],[2,5],[3,2],[3,3],[3,4],[4,1],[4,5],[5,2],[5,3],[5,4]], start:[6,0], goal:[0,6], par:9  },
+  { size:7, walls:[[1,5],[2,4],[3,3],[4,2],[5,1]],                                            start:[6,0], goal:[0,6], par:10 },
+  { size:7, walls:[[0,3],[1,2],[1,4],[2,1],[2,5],[3,0],[3,6],[4,1],[4,5],[5,2],[5,4],[6,3]], start:[6,0], goal:[0,6], par:11 },
+  { size:8, walls:[[1,1],[1,6],[2,3],[2,5],[3,2],[3,4],[4,3],[4,5],[5,1],[5,6],[6,2],[6,4]], start:[7,0], goal:[0,7], par:12 },
+  { size:8, walls:[[1,2],[1,4],[2,1],[2,3],[2,5],[3,0],[3,2],[3,6],[4,1],[4,5],[4,7],[5,2],[5,4],[5,6],[6,3],[6,5]], start:[7,1], goal:[0,6], par:14 },
+  { size:8, walls:[[0,2],[0,4],[1,1],[1,3],[1,5],[2,0],[2,2],[2,6],[3,1],[3,3],[3,5],[3,7],[4,0],[4,2],[4,4],[4,6],[5,1],[5,3],[5,7],[6,2],[6,4],[6,6]], start:[7,0], goal:[0,7], par:16 },
+];
+
+let lvlIdx=0, bishopPos, goalPos, walls, size, moves, trail, validMoves, gameOver;
+
+function key(r,c){ return `${r},${c}`; }
+function isWall(r,c){ return walls.has(key(r,c)); }
+function inBounds(r,c){ return r>=0 && r<size && c>=0 && c<size; }
+
+function getMoves(r,c){
+  const dirs=[[-1,-1],[-1,1],[1,-1],[1,1]], res=[];
+  for(const [dr,dc] of dirs){
+    let nr=r+dr, nc=c+dc;
+    while(inBounds(nr,nc)){
+      if(isWall(nr,nc)) break;
+      res.push([nr,nc]);
+      nr+=dr; nc+=dc;
+    }
+  }
+  return res;
+}
+
+function load(idx){
+  const l=LEVELS[idx];
+  size=l.size; walls=new Set(l.walls.map(([r,c])=>key(r,c)));
+  bishopPos=[...l.start]; goalPos=[...l.goal];
+  moves=0; trail=new Set([key(l.start[0],l.start[1])]);
+  gameOver=false; validMoves=getMoves(bishopPos[0],bishopPos[1]);
+  document.getElementById('levelVal').textContent=idx+1;
+  document.getElementById('parVal').textContent=l.par;
+  document.getElementById('movesVal').textContent=0;
+  document.getElementById('levelLabel').textContent=`Level ${idx+1}`;
+  document.getElementById('levelFill').style.width=`${(idx/TOTAL)*100}%`;
+  document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('status').textContent='Move the bishop diagonally to reach the ★ goal';
+  render();
+}
+
+function bishopSVG(){
+  return `<svg class="piece" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="13" r="8" fill="#6C63FF" stroke="#A09BFF" stroke-width="2.5"/>
+    <circle cx="50" cy="13" r="3" fill="#FFB830"/>
+    <path d="M36 42 Q50 16 64 42 Q71 56 64 69 Q57 79 50 81 Q43 79 36 69 Q29 56 36 42Z" fill="#6C63FF" stroke="#A09BFF" stroke-width="2"/>
+    <line x1="42" y1="61" x2="58" y2="61" stroke="#A09BFF" stroke-width="2" stroke-linecap="round"/>
+    <rect x="30" y="81" width="40" height="8" rx="4" fill="#5450CC" stroke="#A09BFF" stroke-width="2"/>
+    <rect x="24" y="88" width="52" height="7" rx="3.5" fill="#4440BB" stroke="#A09BFF" stroke-width="2"/>
+  </svg>`;
+}
+
+function goalSVG(){
+  return `<svg class="goal-marker" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="50,8 61,34 90,34 67,56 76,82 50,64 24,82 33,56 10,34 39,34"
+             fill="rgba(255,184,48,0.2)" stroke="#FFB830" stroke-width="3"/>
+  </svg>`;
+}
+
+function render(){
+  const board=document.getElementById('board');
+  board.style.gridTemplateColumns=`repeat(${size},1fr)`;
+  board.innerHTML='';
+  const vset=new Set(validMoves.map(([r,c])=>key(r,c)));
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const cell=document.createElement('div');
+      const k=key(r,c);
+      cell.className=`cell ${(r+c)%2===0?'light':'dark'}`;
+      if(isWall(r,c)){
+        cell.classList.add('wall');
+      } else {
+        if(trail.has(k) && k!==key(bishopPos[0],bishopPos[1])) cell.classList.add('trail');
+        if(vset.has(k)) cell.classList.add('valid-move');
+        if(r===goalPos[0]&&c===goalPos[1]){ cell.classList.add('goal'); cell.innerHTML=goalSVG(); }
+        if(r===bishopPos[0]&&c===bishopPos[1]) cell.innerHTML=bishopSVG();
+      }
+      cell.dataset.r=r; cell.dataset.c=c;
+      cell.addEventListener('click',onCell);
+      board.appendChild(cell);
+    }
+  }
+}
+
+function onCell(e){
+  if(gameOver) return;
+  const r=parseInt(e.currentTarget.dataset.r), c=parseInt(e.currentTarget.dataset.c);
+  if(!validMoves.some(([vr,vc])=>vr===r&&vc===c)) return;
+  bishopPos=[r,c]; moves++;
+  trail.add(key(r,c));
+  document.getElementById('movesVal').textContent=moves;
+  if(r===goalPos[0]&&c===goalPos[1]){ gameOver=true; validMoves=[]; render(); showWin(); return; }
+  validMoves=getMoves(r,c);
+  if(validMoves.length===0){ gameOver=true; render(); showStuck(); return; }
+  document.getElementById('status').textContent=`${validMoves.length} move${validMoves.length>1?'s':''} available`;
+  render();
+}
+
+function showWin(){
+  const diff=moves-LEVELS[lvlIdx].par;
+  document.getElementById('overlayTitle').className='overlay-title win';
+  document.getElementById('overlayTitle').textContent='Solved!';
+  let sub=`${moves} move${moves>1?'s':''}`;
+  if(diff<=0) sub+=' — Perfect! ★'; else if(diff<=2) sub+=` — ${diff} over par`; else sub+=` — par is ${LEVELS[lvlIdx].par}`;
+  document.getElementById('overlaySub').textContent=sub;
+  const btn=document.getElementById('overlayBtn');
+  if(lvlIdx>=TOTAL-1){ btn.textContent='Play Again'; btn.onclick=()=>{lvlIdx=0;load(0);}; }
+  else { btn.textContent='Next Level →'; btn.onclick=()=>{lvlIdx++;load(lvlIdx);}; }
+  document.getElementById('overlay').classList.add('visible');
+}
+
+function showStuck(){
+  document.getElementById('overlayTitle').className='overlay-title fail';
+  document.getElementById('overlayTitle').textContent='Stuck!';
+  document.getElementById('overlaySub').textContent='No diagonal moves available. Try a different path.';
+  const btn=document.getElementById('overlayBtn');
+  btn.textContent='↺ Try Again'; btn.onclick=()=>load(lvlIdx);
+  document.getElementById('overlay').classList.add('visible');
+}
+
+document.getElementById('btnRestart').addEventListener('click',()=>load(lvlIdx));
+document.getElementById('btnSkip').addEventListener('click',()=>{ if(lvlIdx<TOTAL-1){lvlIdx++;load(lvlIdx);} });
+
+load(0);
+</script>
+</body>
+</html>
