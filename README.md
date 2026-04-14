@@ -1,4 +1,4 @@
-# ♟️ CHESSWORLD.GAMES — Chess-Inspired Game Collection
+# ♟️ CHESSWORLD.GAMES — Chess-Inspired Games
 
 Welcome to the beginnings of the ultimate collection of chess-related games playable on **CHESSWORLD.GAMES**, a platform for experimenting with chess-inspired mechanics and original strategy ideas.
 
@@ -30,6 +30,6 @@ The goal is to show how simple rule changes in a familiar system like chess can 
 
 ## 👋 Thanks for checking it out
 
-If you’re reviewing this, playing these games, or exploring the code — thank you.
+If you’re reviewing this — thank you. Please visit the site at https://chessworld.netlify.app
 
 These projects are meant to be simple, creative, and fun interpretations of chess mechanics
