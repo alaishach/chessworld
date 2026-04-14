@@ -8,15 +8,14 @@ interface Props {
 
 const { title = 'CHESSWORLD.GAMES', description = 'A platform for chess-inspired browser games.' } = Astro.props;
 const currentPath = Astro.url.pathname;
-
 const navLinks = [
+  { href: '/', label: 'Home' },
   { href: '/games', label: 'Games' },
   { href: '/docs', label: 'Docs' },
   { href: '/about', label: 'About' },
   { href: '/join', label: 'Join' },
 ];
 ---
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +34,7 @@ const navLinks = [
           <li>
             <a
               href={link.href}
-              class:list={['nav-link', { active: currentPath.startsWith(link.href) }]}
+              class:list={['nav-link', { active: link.href === '/' ? currentPath === '/' : currentPath.startsWith(link.href) }]}
             >
               {link.label}
             </a>
@@ -47,16 +46,14 @@ const navLinks = [
       </button>
     </div>
   </nav>
-
   <main>
     <slot />
   </main>
-
   <footer class="footer">
     <div class="container footer-inner">
       <span class="footer-brand">CHESSWORLD.GAMES</span>
       <span class="footer-text">A Zenith Project</span>
-      <a href="https://github.com/alaishach/game.chessworld" target="_blank" rel="noopener" class="footer-link">
+      <a href="https://github.com/alaishach/chessworld" target="_blank" rel="noopener" class="footer-link">
         GitHub ↗
       </a>
     </div>
@@ -72,9 +69,9 @@ const navLinks = [
   height: var(--nav-height);
   display: flex;
   align-items: center;
-  background: rgba(27, 38, 59, 0.92);
+  background: rgba(18, 17, 42, 0.92);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(119, 141, 169, 0.15);
+  border-bottom: 1px solid rgba(108, 99, 255, 0.15);
 }
 
 .nav-inner {
@@ -118,7 +115,7 @@ const navLinks = [
 .nav-link:hover,
 .nav-link.active {
   color: var(--color-text-primary);
-  background: rgba(58, 134, 255, 0.12);
+  background: rgba(108, 99, 255, 0.12);
 }
 .nav-link.active {
   color: var(--color-primary);
@@ -144,7 +141,7 @@ const navLinks = [
 }
 
 .footer {
-  border-top: 1px solid rgba(119, 141, 169, 0.15);
+  border-top: 1px solid rgba(108, 99, 255, 0.15);
   padding: 1.5rem 0;
   margin-top: 6rem;
 }
@@ -186,7 +183,7 @@ const navLinks = [
     left: 0;
     right: 0;
     background: var(--color-bg-main);
-    border-bottom: 1px solid rgba(119, 141, 169, 0.15);
+    border-bottom: 1px solid rgba(108, 99, 255, 0.15);
     padding: 1rem;
     flex-direction: column;
     gap: 0.25rem;
