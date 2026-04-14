@@ -4,8 +4,12 @@ import { getGameContent, RATING_LABELS, RATING_COLORS } from '../../lib/games';
 import { renderMarkdown } from '../../lib/markdown';
 
 const { game: gameId } = Astro.params;
-const content = gameId ? getGameContent(gameId) : null;
 
+if (gameId && gameId.includes('.')) {
+  return new Response(null, { status: 404 });
+}
+
+const content = gameId ? getGameContent(gameId) : null;
 if (!content) {
   return Astro.redirect('/games');
 }
