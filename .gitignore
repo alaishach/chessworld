@@ -1,4 +1,10 @@
-# Google App Engine generated folder
-appengine-generated/
-/node_modules/
-/games/get-captured/
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+*.bak
+*.tmp
+
+# Local Netlify folder
+.netlify

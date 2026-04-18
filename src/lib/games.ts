@@ -41,6 +41,12 @@ export const RATING_COLORS: Record<GameRating, { bg: string; text: string }> = {
   M: { bg: 'rgba(255, 107, 107, 0.15)', text: '#FF6B6B' },
 };
 
+// In-memory cache — populated on first access, reused for every subsequent request.
+// Restart the dev server to pick up changes to game files or the registry.
+let _registry: string[] | null = null;
+const _manifests = new Map<string, GameManifest | null>();
+const _content   = new Map<string, GameContent | null>();
+
 function readMarkdown(path: string): string | null {
   if (!existsSync(path)) return null;
   try {
@@ -51,31 +57,42 @@ function readMarkdown(path: string): string | null {
 }
 
 function loadManifest(gameId: string): GameManifest | null {
+  if (_manifests.has(gameId)) return _manifests.get(gameId)!;
+
   const manifestPath = resolve(process.cwd(), 'games', gameId, 'game.json');
   if (!existsSync(manifestPath)) {
     console.warn(`No game.json found for registered game: ${gameId}`);
+    _manifests.set(gameId, null);
     return null;
   }
   try {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-    return { id: gameId, ...manifest };
+    const result = { id: gameId, ...manifest };
+    _manifests.set(gameId, result);
+    return result;
   } catch {
     console.error(`Failed to parse game.json for: ${gameId}`);
+    _manifests.set(gameId, null);
     return null;
   }
 }
 
 function loadRegistry(): string[] {
+  if (_registry) return _registry;
+
   const registryPath = resolve(process.cwd(), 'games.registry.json');
   if (!existsSync(registryPath)) {
     console.warn('games.registry.json not found.');
-    return [];
+    _registry = [];
+    return _registry;
   }
   try {
-    return JSON.parse(readFileSync(registryPath, 'utf-8'));
+    _registry = JSON.parse(readFileSync(registryPath, 'utf-8'));
+    return _registry!;
   } catch {
     console.error('Failed to parse games.registry.json');
-    return [];
+    _registry = [];
+    return _registry;
   }
 }
 
@@ -96,10 +113,18 @@ export function getGame(id: string): GameManifest | null {
 }
 
 export function getGameContent(id: string): GameContent | null {
+  if (_content.has(id)) return _content.get(id)!;
+
   const manifest = getGame(id);
-  if (!manifest) return null;
+  if (!manifest) {
+    _content.set(id, null);
+    return null;
+  }
+
   const base = resolve(process.cwd(), 'games', id);
   const description = readMarkdown(resolve(base, 'description.md'));
-  const rules = readMarkdown(resolve(base, 'rules.md'));
-  return { manifest, description, rules };
+  const rules       = readMarkdown(resolve(base, 'rules.md'));
+  const result      = { manifest, description, rules };
+  _content.set(id, result);
+  return result;
 }

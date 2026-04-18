@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { readFileSync, existsSync } from 'fs';
-import { resolve, extname } from 'path';
+import { resolve, extname, normalize, sep } from 'path';
 
 const MIME: Record<string, string> = {
   '.html': 'text/html',
@@ -30,11 +30,13 @@ export const GET: APIRoute = async ({ params }) => {
     return new Response('Not found', { status: 404 });
   }
 
-  const filePath = resolve(process.cwd(), 'games', game, ...file.split('/'));
+  // normalize() converts forward slashes to backslashes on Windows,
+  // ensuring startsWith works correctly for the security check on all platforms
+  const gamesRoot = normalize(resolve(process.cwd(), 'games'));
+  const filePath  = normalize(resolve(process.cwd(), 'games', game, ...file.split('/')));
 
-  // Security: ensure the resolved path stays within the games directory
-  const gamesRoot = resolve(process.cwd(), 'games');
-  if (!filePath.startsWith(gamesRoot)) {
+  // Append sep so 'games' can't be bypassed by a path like 'games-evil/...'
+  if (!filePath.startsWith(gamesRoot + sep)) {
     return new Response('Forbidden', { status: 403 });
   }
 

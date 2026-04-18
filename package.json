@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.3.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -13,7 +13,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/netlify": "^5.5.4",
-    "astro": "^4.16.0"
+    "@astrojs/netlify": "^6.6.5",
+    "astro": "^5.17.3",
+    "marked": "^15.0.12"
   }
 }
