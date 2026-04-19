@@ -30,6 +30,6 @@ The goal is to show how simple rule changes in a familiar system like chess can 
 
 ## 👋 Thanks for checking it out
 
-If you’re reviewing this or exploring the code — thank you. Please visit chessworld.netlify.app to play our creations.
+If you’re reviewing this or exploring the code — thank you. Please visit our [website](chessworld.netlify.app) to play our creations.
 
 These projects are meant to be simple, creative, and fun interpretations of chess mechanics
