@@ -5,10 +5,15 @@ const panels = [editorDiv, gameDiv];
 const gameBoardDiv = document.getElementById('game-board-div');
 const editorBoardDiv = document.getElementById('editor-board-div');
 
-const editorFENTextarea = document.getElementById('editor-fen-textarea');
-
 editorDiv.boardDiv = editorBoardDiv;
 gameDiv.boardDiv = gameBoardDiv;
+
+const editorFENTextarea = document.getElementById('editor-fen-textarea');
+
+const gameCurrentMovesSpan = document.getElementById('game-current-moves-span');
+const gameOptimalMovesSpan = document.getElementById('game-optimal-moves-span');
+
+
 
 function showPanel(panelDiv) {
     editorFENTextarea.value = getFEN();
@@ -21,7 +26,6 @@ function showPanel(panelDiv) {
 function getFEN() {
     return '8/8/8/8/8/8/8/8'; 
 }
-
 
 
 

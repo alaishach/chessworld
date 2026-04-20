@@ -11,7 +11,6 @@
 |--------|-----|
 | Move knight | Click any highlighted square |
 | Restart level | Click the Restart button |
-| Skip level | Click the Skip button |
 | View solution | Click the View solution button |
 
 ## Scoring
