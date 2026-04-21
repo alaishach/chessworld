@@ -36,6 +36,7 @@ const pieceElements = [
 let editorCurrentPiece = null;
 let editorHasWhiteKnight = false;
 let editorHasBlackKing = false;
+let inEditor = true;
 
 
 function showPanel(panelDiv) {
@@ -94,7 +95,8 @@ function updateFENTextarea() {
     editorFENTextarea.value = getFEN();
 }
 
-function parseFEN(fen) {
+
+function validateFEN(fen) {
     const ranks = fen
         .trim()
         .split('/')
@@ -119,10 +121,8 @@ function parseFEN(fen) {
         'p': blackPawnElement,
     };
 
-    // TEMP board representation (length 64)
     const tempBoard = [];
 
-    // -------- PHASE 1: VALIDATION + BUILD --------
     for (let r = 0; r < 8; r++) {
         const rank = ranks[r];
         let fileCount = 0;
@@ -167,7 +167,23 @@ function parseFEN(fen) {
         throw new Error(`Expected exactly 1 black king, got ${blackKingCount}`);
     }
 
-    // -------- PHASE 2: APPLY --------
+    return tempBoard;
+}
+function parseFEN(fen) {
+    const tempBoard = validateFEN(fen);
+
+    const map = {
+        'N': whiteKnightElement,
+        'P': whitePawnElement,
+
+        'k': blackKingElement,
+        'q': blackQueenElement,
+        'r': blackRookElement,
+        'b': blackBishopElement,
+        'n': blackKnightElement,
+        'p': blackPawnElement,
+    };
+
     const squares = Array.from(board.children);
 
     for (let i = 0; i < 64; i++) {
@@ -205,13 +221,15 @@ function clearSquare(square) {
 
 
 
-document.getElementById('show-editor-btn').onclick = () => {
-    showPanel(editorDiv);
-};
+// document.getElementById('show-editor-btn').onclick = () => {
+//     inEditor = true;
+//     showPanel(editorDiv);
+// };
 
-document.getElementById('show-game-btn').onclick = () => {
-    showPanel(gameDiv);
-};
+// document.getElementById('show-game-btn').onclick = () => {
+//     inEditor = false;
+//     showPanel(gameDiv);
+// };
 
 
 
@@ -230,25 +248,27 @@ for (let row = 0; row < 8; row++) {
     }
 
     square.addEventListener('click', () => {
-        if (editorCurrentPiece) {
-            const clone = editorCurrentPiece.cloneNode(true);
-            if (clone.id === 'black-king' && editorHasBlackKing) return;
-            if (clone.id === 'white-knight' && editorHasWhiteKnight) return;
+        if (inEditor) {
+            if (editorCurrentPiece) {
+                const clone = editorCurrentPiece.cloneNode(true);
+                if (clone.id === 'black-king' && editorHasBlackKing) return;
+                if (clone.id === 'white-knight' && editorHasWhiteKnight) return;
 
-            clearSquare(square);
-    
-            clone.setAttribute('class', clone.id);
+                clearSquare(square);
+        
+                clone.setAttribute('class', clone.id);
 
-            if (clone.id === 'white-knight') editorHasWhiteKnight = true;
-            if (clone.id === 'black-king') editorHasBlackKing = true;
+                if (clone.id === 'white-knight') editorHasWhiteKnight = true;
+                if (clone.id === 'black-king') editorHasBlackKing = true;
 
-            clone.removeAttribute('id'); 
-            square.appendChild(clone);
+                clone.removeAttribute('id'); 
+                square.appendChild(clone);
+            }
+            else {
+                clearSquare(square);
+            }
+            updateFENTextarea();
         }
-        else {
-            clearSquare(square);
-        }
-        updateFENTextarea();
     });
 
     board.appendChild(square);
@@ -299,6 +319,25 @@ editorCopyFENbtn.onclick = async () => {
         console.error('Copy failed:', err);
     }
 
+};
+
+const editorPlayBtn = document.getElementById('editor-play-btn');
+editorPlayBtn.onclick = () => {
+    try {
+        validateFEN(editorFENTextarea.value);
+        inEditor = false;
+        showPanel(gameDiv);
+
+    }
+    catch (e) {
+        console.error(e);
+    }
+};
+
+const gameEditBtn = document.getElementById('game-edit-btn');
+gameEditBtn.onclick = () => {
+    inEditor = true;
+    showPanel(editorDiv);
 };
 
 
