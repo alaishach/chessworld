@@ -39,6 +39,18 @@ let editorHasBlackKing = false;
 let inEditor = true;
 
 
+let bitboardWhiteOccupancy;
+let bitboardBlackOccupancy;
+let bitboardWhiteKnight;
+let bitboardBlackKing;
+let bitboardWhitePawns;
+let bitboardBlackQueens;
+let bitboardBlackRooks;
+let bitboardBlackBishops;
+let bitboardBlackKnights;
+let bitboardBlackPawns;
+
+
 function showPanel(panelDiv) {
     editorFENTextarea.value = getFEN();
     panels.forEach(panel => {
@@ -95,6 +107,10 @@ function updateFENTextarea() {
     editorFENTextarea.value = getFEN();
 }
 
+// When converting from DOM square index to bitboard index and vice versa
+function getOppositeTypeSquareIndex(index) {
+    return (7 - Math.floor(index / 8)) * 8 + (index % 8);
+}
 
 function validateFEN(fen) {
     const ranks = fen
@@ -232,6 +248,170 @@ function clearSquare(square) {
 // };
 
 
+function placePiece(piece, square) {
+    const clone = piece.cloneNode(true);
+    if (clone.id === 'black-king' && editorHasBlackKing) return;
+    if (clone.id === 'white-knight' && editorHasWhiteKnight) return;
+
+    clearSquare(square);
+
+    clone.setAttribute('class', clone.id);
+
+    if (clone.id === 'white-knight') editorHasWhiteKnight = true;
+    if (clone.id === 'black-king') editorHasBlackKing = true;
+
+    clone.removeAttribute('id'); 
+    square.appendChild(clone);
+}
+
+
+
+const knightAttacks = new Array(64).fill(0n);
+
+for (let sq = 0; sq < 64; sq++) {
+    const x = sq % 8;
+    const y = Math.floor(sq / 8);
+
+    const moves = [
+        [x+2, y+1], [x+2, y-1],
+        [x-2, y+1], [x-2, y-1],
+        [x+1, y+2], [x+1, y-2],
+        [x-1, y+2], [x-1, y-2],
+    ];
+
+    let mask = 0n;
+
+    for (const [nx, ny] of moves) {
+        if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            const target = ny * 8 + nx;
+            mask |= 1n << BigInt(target);
+        }
+    }
+
+    knightAttacks[sq] = mask;
+}
+
+
+
+
+
+function initBitboards() {
+    bitboardWhiteOccupancy = 0n;
+    bitboardBlackOccupancy = 0n;
+    bitboardWhiteKnight = 0n;
+    bitboardBlackKing = 0n;
+    bitboardWhitePawns = 0n;
+    bitboardBlackQueens = 0n;
+    bitboardBlackRooks = 0n;
+    bitboardBlackBishops = 0n;
+    bitboardBlackKnights = 0n;
+    bitboardBlackPawns = 0n;
+
+    const fen = getRawFEN(editorFENTextarea.value);
+
+    const rows = fen.split("/");
+
+    for (let rank = 0; rank < 8; rank++) {
+        let file = 0;
+
+        for (const char of rows[rank]) {
+            if (char >= "1" && char <= "8") {
+                file += Number(char);
+                continue;
+            }
+
+            const squareIndex = (7 - rank) * 8 + file;
+            const location = 1n << BigInt(squareIndex);
+
+            switch (char) {
+                case "P": bitboardWhitePawns |= location; break;
+                case "N": bitboardWhiteKnight |= location; break;
+
+                case "p": bitboardBlackPawns |= location; break;
+                case "n": bitboardBlackKnights |= location; break;
+                case "k": bitboardBlackKing |= location; break;
+                case "q": bitboardBlackQueens |= location; break;
+                case "r": bitboardBlackRooks |= location; break;
+                case "b": bitboardBlackBishops |= location; break;
+            }
+
+            if (char === char.toUpperCase()) {
+                bitboardWhiteOccupancy |= location;
+            } else {
+                bitboardBlackOccupancy |= location;
+            }
+
+            file++;
+        }
+    }
+}
+
+
+function bitboardToString(bb) {
+    let str = "";
+
+    for (let rank = 7; rank >= 0; rank--) {
+        let row = "";
+
+        for (let file = 0; file < 8; file++) {
+            const square = BigInt(rank * 8 + file);
+            const bit = (bb & (1n << square)) !== 0n;
+
+            row += bit ? "1 " : ". ";
+        }
+
+        str += row.trimEnd() + "\n";
+    }
+
+    return str;
+}
+
+function logBitboardsHexadecimal() {
+    const bb = {
+        whiteOccupancy: bitboardWhiteOccupancy,
+        blackOccupancy: bitboardBlackOccupancy,
+        whiteKnight: bitboardWhiteKnight,
+        blackKing: bitboardBlackKing,
+        whitePawns: bitboardWhitePawns,
+        blackQueens: bitboardBlackQueens,
+        blackRooks: bitboardBlackRooks,
+        blackBishops: bitboardBlackBishops,
+        blackKnights: bitboardBlackKnights,
+        blackPawns: bitboardBlackPawns,
+    };
+
+    for (const [name, value] of Object.entries(bb)) {
+        console.log(name);
+        console.log(bitboardToString(value));
+    }
+}
+
+
+function getKnightMoves(bitboardSquareIndex, ownPieces) {
+    return knightAttacks[bitboardSquareIndex] & ~(bitboardWhiteOccupancy | bitboardBlackOccupancy); // TODO: temporary
+}
+
+function getWhiteKnightBitboardSquareIndex() {
+    for (let i = 0; i < 64; i++) {
+        if (bitboardWhiteKnight & (1n << BigInt(i))) {
+            return i;
+        }
+    }
+}
+
+function moveKnight(targetBitboardSquareIndex) {
+    const DOMTargetIndex = getOppositeTypeSquareIndex(targetBitboardSquareIndex);
+    const DOMCurrentIndex = getOppositeTypeSquareIndex(getWhiteKnightBitboardSquareIndex());
+
+    const targetSquare = board.children[DOMTargetIndex];
+    const currentSquare = board.children[DOMCurrentIndex];
+
+    targetSquare.appendChild(currentSquare.children[0]);
+    bitboardWhiteOccupancy ^= bitboardWhiteKnight;
+    bitboardWhiteKnight = 1n << BigInt(targetBitboardSquareIndex);
+    bitboardWhiteOccupancy ^= bitboardWhiteKnight;
+
+}
 
 const board = document.createElement('div');
 board.classList.add('board');
@@ -247,32 +427,47 @@ for (let row = 0; row < 8; row++) {
       square.classList.add('dark');
     }
 
+    const squareIndex = getOppositeTypeSquareIndex(row * 8 + col);
+    const squareMask = 1n << BigInt(squareIndex);
+
     square.addEventListener('click', () => {
         if (inEditor) {
             if (editorCurrentPiece) {
-                const clone = editorCurrentPiece.cloneNode(true);
-                if (clone.id === 'black-king' && editorHasBlackKing) return;
-                if (clone.id === 'white-knight' && editorHasWhiteKnight) return;
-
-                clearSquare(square);
-        
-                clone.setAttribute('class', clone.id);
-
-                if (clone.id === 'white-knight') editorHasWhiteKnight = true;
-                if (clone.id === 'black-king') editorHasBlackKing = true;
-
-                clone.removeAttribute('id'); 
-                square.appendChild(clone);
+                placePiece(editorCurrentPiece, square);
             }
             else {
                 clearSquare(square);
             }
             updateFENTextarea();
         }
+        else {
+            const knightSquare = getWhiteKnightBitboardSquareIndex();
+            if ((squareMask & getKnightMoves(knightSquare)) === 0n) return;
+            moveKnight(squareIndex);
+            incrementCurrentMovesCounter();
+        }
     });
 
     board.appendChild(square);
   }
+}
+
+function incrementCurrentMovesCounter() {
+    const optimalMoves = Number(gameOptimalMovesSpan.textContent);
+    const currentMoves = Number(gameCurrentMovesSpan.textContent);
+    const newMoves = currentMoves + 1;
+    gameCurrentMovesSpan.textContent = newMoves;
+
+
+    if (newMoves >= 2 * optimalMoves) {
+        gameCurrentMovesSpan.classList.remove('game-decent');
+        gameCurrentMovesSpan.classList.add('game-bad');
+    }
+    else if (newMoves >= 1.5 * optimalMoves) {
+        gameCurrentMovesSpan.classList.remove('game-perfect');
+        gameCurrentMovesSpan.classList.add('game-decent');
+    }
+
 }
 
 pieceElements.forEach(pieceElement => {
@@ -287,7 +482,6 @@ pieceElements.forEach(pieceElement => {
                 piece.classList.remove('editor-selected-piece');
             });
             pieceElement.classList.add('editor-selected-piece');
-            console.log(editorCurrentPiece.id);
         }
         
 
@@ -309,7 +503,7 @@ const editorCopyFENbtn = document.getElementById('editor-copy-fen-btn');
 editorCopyFENbtn.onclick = async () => {
     const fen = getFEN();
     try {
-        await navigator.clipboard.writeText(fen.replaceAll(/\s/g, ''));
+        await navigator.clipboard.writeText(editorFENTextarea.value);
         editorCopyFENbtn.textContent = 'Copied!';
         setTimeout(() => {
             editorCopyFENbtn.textContent = 'Copy FEN';
@@ -321,17 +515,32 @@ editorCopyFENbtn.onclick = async () => {
 
 };
 
+
+
+function getRawFEN(fen) {
+    return fen.replaceAll(/\s/g, '');
+}
+
 const editorPlayBtn = document.getElementById('editor-play-btn');
 editorPlayBtn.onclick = () => {
     try {
         validateFEN(editorFENTextarea.value);
-        inEditor = false;
-        showPanel(gameDiv);
-
     }
     catch (e) {
         console.error(e);
+        return;
     }
+
+    gameCurrentMovesSpan.classList.remove('game-decent');
+    gameCurrentMovesSpan.classList.remove('game-bad');
+    gameCurrentMovesSpan.classList.add('game-perfect');
+    gameCurrentMovesSpan.textContent = 0;
+    inEditor = false;
+    showPanel(gameDiv);
+    initBitboards();
+    logBitboardsHexadecimal();
+
+
 };
 
 const gameEditBtn = document.getElementById('game-edit-btn');
