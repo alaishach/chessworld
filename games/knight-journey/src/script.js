@@ -37,6 +37,7 @@ let editorCurrentPiece = null;
 let editorHasWhiteKnight = false;
 let editorHasBlackKing = false;
 let inEditor = true;
+let isGameOver = false;
 
 
 let bitboardWhiteOccupancy;
@@ -52,7 +53,7 @@ let bitboardBlackPawns;
 
 
 function showPanel(panelDiv) {
-    editorFENTextarea.value = getFEN();
+    // editorFENTextarea.value = getFEN();
     panels.forEach(panel => {
         panel.classList.toggle('hidden', panel.id !== panelDiv.id);
     });
@@ -388,7 +389,7 @@ function logBitboardsHexadecimal() {
 
 
 function getKnightMoves(bitboardSquareIndex, ownPieces) {
-    return knightAttacks[bitboardSquareIndex] & ~(bitboardWhiteOccupancy | bitboardBlackOccupancy); // TODO: temporary
+    return knightAttacks[bitboardSquareIndex] & ~ownPieces; 
 }
 
 function getWhiteKnightBitboardSquareIndex() {
@@ -406,10 +407,31 @@ function moveKnight(targetBitboardSquareIndex) {
     const targetSquare = board.children[DOMTargetIndex];
     const currentSquare = board.children[DOMCurrentIndex];
 
+    Array.from(targetSquare.children).forEach(child => {
+        targetSquare.removeChild(child);
+    });
     targetSquare.appendChild(currentSquare.children[0]);
+    
+    // moves white knight
     bitboardWhiteOccupancy ^= bitboardWhiteKnight;
     bitboardWhiteKnight = 1n << BigInt(targetBitboardSquareIndex);
     bitboardWhiteOccupancy ^= bitboardWhiteKnight;
+
+
+    // white knight captures black piece
+    const mask = ~(1n << BigInt(targetBitboardSquareIndex));
+
+    bitboardBlackOccupancy &= mask;
+    bitboardBlackKing      &= mask;
+    bitboardBlackQueens    &= mask;
+    bitboardBlackRooks     &= mask;
+    bitboardBlackBishops   &= mask;
+    bitboardBlackKnights   &= mask;
+    bitboardBlackPawns     &= mask;
+
+    console.log('==============================');
+    logBitboardsHexadecimal();
+
 
 }
 
@@ -441,15 +463,28 @@ for (let row = 0; row < 8; row++) {
             updateFENTextarea();
         }
         else {
+            if (isGameOver) return;
             const knightSquare = getWhiteKnightBitboardSquareIndex();
-            if ((squareMask & getKnightMoves(knightSquare)) === 0n) return;
+            if ((squareMask & getKnightMoves(knightSquare, bitboardWhiteOccupancy)) === 0n) return;
             moveKnight(squareIndex);
+            if (bitboardBlackKing === 0n) {
+                isGameOver = true;
+                editorHasBlackKing = false;
+            }
             incrementCurrentMovesCounter();
         }
     });
 
     board.appendChild(square);
   }
+}
+
+
+function resetCurrentMovesCounter() {
+    gameCurrentMovesSpan.textContent = 0;
+    gameCurrentMovesSpan.classList.remove('game-decent');
+    gameCurrentMovesSpan.classList.remove('game-bad');
+    gameCurrentMovesSpan.classList.add('game-perfect');
 }
 
 function incrementCurrentMovesCounter() {
@@ -531,11 +566,9 @@ editorPlayBtn.onclick = () => {
         return;
     }
 
-    gameCurrentMovesSpan.classList.remove('game-decent');
-    gameCurrentMovesSpan.classList.remove('game-bad');
-    gameCurrentMovesSpan.classList.add('game-perfect');
-    gameCurrentMovesSpan.textContent = 0;
+    resetCurrentMovesCounter();
     inEditor = false;
+    isGameOver = false;
     showPanel(gameDiv);
     initBitboards();
     logBitboardsHexadecimal();
@@ -545,9 +578,19 @@ editorPlayBtn.onclick = () => {
 
 const gameEditBtn = document.getElementById('game-edit-btn');
 gameEditBtn.onclick = () => {
+    updateFENTextarea();
     inEditor = true;
     showPanel(editorDiv);
 };
 
+const gameRestartLevelBtn = document.getElementById('game-restart-level-btn');
+gameRestartLevelBtn.onclick = () => {
+    isGameOver = false;
+    parseFEN(editorFENTextarea.value);
+    resetCurrentMovesCounter();
+    initBitboards();
+    logBitboardsHexadecimal();
+};
 
+updateFENTextarea();
 showPanel(editorDiv);
