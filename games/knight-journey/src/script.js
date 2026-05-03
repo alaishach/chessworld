@@ -238,16 +238,6 @@ function clearSquare(square) {
 
 
 
-// document.getElementById('show-editor-btn').onclick = () => {
-//     inEditor = true;
-//     showPanel(editorDiv);
-// };
-
-// document.getElementById('show-game-btn').onclick = () => {
-//     inEditor = false;
-//     showPanel(gameDiv);
-// };
-
 
 function placePiece(piece, square) {
     const clone = piece.cloneNode(true);
@@ -435,6 +425,256 @@ function moveKnight(targetBitboardSquareIndex) {
 
 }
 
+
+
+const rookTable = Array.from({ length: 64 }, () => new Map());
+const rookMasks = new Array(64).fill(0n);
+
+// directions: up, down, left, right
+const rookDirections = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+];
+
+// generate rook mask 
+function genRookMask(sq) {
+    const x = sq % 8;
+    const y = Math.floor(sq / 8);
+
+    let mask = 0n;
+
+    for (const [dx, dy] of rookDirections) {
+        let nx = x + dx;
+        let ny = y + dy;
+
+        while (nx >= 0 && nx <= 7 && ny >= 0 && ny <= 7) {
+            mask |= 1n << BigInt(ny * 8 + nx);
+            nx += dx;
+            ny += dy;
+        }
+    }
+
+    return mask;
+}
+
+// generate attacks given a blocker set
+function genRookAttacks(sq, blockers) {
+    const x = sq % 8;
+    const y = Math.floor(sq / 8);
+
+    let attacks = 0n;
+
+    for (const [dx, dy] of rookDirections) {
+        let nx = x + dx;
+        let ny = y + dy;
+
+        while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            const idx = ny * 8 + nx;
+            const bit = 1n << BigInt(idx);
+
+            attacks |= bit;
+
+            if (blockers & bit) break;
+
+            nx += dx;
+            ny += dy;
+        }
+    }
+
+    return attacks;
+}
+
+
+function buildRookTables() {
+    for (let sq = 0; sq < 64; sq++) {
+
+        const mask = genRookMask(sq);
+        rookMasks[sq] = mask;
+
+        const relevantSquares = [];
+
+        for (let i = 0; i < 64; i++) {
+            if (mask & (1n << BigInt(i))) {
+                relevantSquares.push(i);
+            }
+        }
+
+        const subsets = 1 << relevantSquares.length;
+
+        for (let subset = 0; subset < subsets; subset++) {
+
+            let blockers = 0n;
+
+            for (let i = 0; i < relevantSquares.length; i++) {
+                if (subset & (1 << i)) {
+                    blockers |= 1n << BigInt(relevantSquares[i]);
+                }
+            }
+
+            const attacks = genRookAttacks(sq, blockers);
+
+            rookTable[sq].set(blockers, attacks);
+        }
+    }
+}
+
+
+
+const bishopTable = Array.from({ length: 64 }, () => new Map());
+const bishopMasks = new Array(64).fill(0n);
+
+// diagonals: NE, NW, SE, SW
+const bishopDirections = [
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
+];
+
+
+
+function genBishopMask(sq) {
+    const x = sq % 8;
+    const y = Math.floor(sq / 8);
+
+    let mask = 0n;
+
+    for (const [dx, dy] of bishopDirections) {
+        let nx = x + dx;
+        let ny = y + dy;
+
+        while (nx >= 0 && nx <= 7 && ny >= 0 && ny <= 7) {
+            mask |= 1n << BigInt(ny * 8 + nx);
+            nx += dx;
+            ny += dy;
+        }
+    }
+
+    return mask;
+}
+
+
+function genBishopAttacks(sq, blockers) {
+    const x = sq % 8;
+    const y = Math.floor(sq / 8);
+
+    let attacks = 0n;
+
+    for (const [dx, dy] of bishopDirections) {
+        let nx = x + dx;
+        let ny = y + dy;
+
+        while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+            const idx = ny * 8 + nx;
+            const bit = 1n << BigInt(idx);
+
+            attacks |= bit;
+
+            if (blockers & bit) break;
+
+            nx += dx;
+            ny += dy;
+        }
+    }
+
+    return attacks;
+}
+
+
+function buildBishopTables() {
+    for (let sq = 0; sq < 64; sq++) {
+
+        const mask = genBishopMask(sq);
+        bishopMasks[sq] = mask;
+
+        const relevantSquares = [];
+
+        for (let i = 0; i < 64; i++) {
+            if (mask & (1n << BigInt(i))) {
+                relevantSquares.push(i);
+            }
+        }
+
+        const subsets = 1 << relevantSquares.length;
+
+        for (let subset = 0; subset < subsets; subset++) {
+
+            let blockers = 0n;
+
+            for (let i = 0; i < relevantSquares.length; i++) {
+                if (subset & (1 << i)) {
+                    blockers |= 1n << BigInt(relevantSquares[i]);
+                }
+            }
+
+            const attacks = genBishopAttacks(sq, blockers);
+
+            bishopTable[sq].set(blockers, attacks);
+        }
+    }
+}
+
+
+const kingAttacks = new Array(64).fill(0n);
+
+const kingDirs = [
+    [1, 1], [1, 0], [1, -1],
+    [0, 1],          [0, -1],
+    [-1, 1], [-1, 0], [-1, -1],
+];
+
+function buildKingAttacks() {
+    for (let sq = 0; sq < 64; sq++) {
+
+        const x = sq % 8;
+        const y = Math.floor(sq / 8);
+
+        let mask = 0n;
+
+        for (const [dx, dy] of kingDirs) {
+            const nx = x + dx;
+            const ny = y + dy;
+
+            if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8) {
+                const idx = ny * 8 + nx;
+                mask |= 1n << BigInt(idx);
+            }
+        }
+
+        kingAttacks[sq] = mask;
+    }
+}
+
+
+const blackPawnAttacks = new Array(64).fill(0n);
+
+function buildBlackPawnAttacks() {
+    for (let sq = 0; sq < 64; sq++) {
+
+        const x = sq % 8;
+        const y = Math.floor(sq / 8);
+
+        let mask = 0n;
+
+        // backward-left
+        if (x > 0 && y > 0) {
+            const idx = (y - 1) * 8 + (x - 1);
+            mask |= 1n << BigInt(idx);
+        }
+
+        // backward-right
+        if (x < 7 && y > 0) {
+            const idx = (y - 1) * 8 + (x + 1);
+            mask |= 1n << BigInt(idx);
+        }
+
+        blackPawnAttacks[sq] = mask;
+    }
+}
+
+
 const board = document.createElement('div');
 board.classList.add('board');
 for (let row = 0; row < 8; row++) {
@@ -466,6 +706,55 @@ for (let row = 0; row < 8; row++) {
             if (isGameOver) return;
             const knightSquare = getWhiteKnightBitboardSquareIndex();
             if ((squareMask & getKnightMoves(knightSquare, bitboardWhiteOccupancy)) === 0n) return;
+            
+            const occupancy = bitboardBlackOccupancy | bitboardWhiteOccupancy;
+
+            let queenAttackedSquares = 0n;
+            let rookAttackedSquares = 0n;
+            let bishopAttackedSquares = 0n;
+            let knightAttackedSquares = 0n;
+            let pawnAttackedSquares = 0n;
+            let kingAttackedSquares = 0n;
+            
+
+            for (let i = 0; i<64; i++) {
+                const pieceMask = 1n << BigInt(i)
+
+                if ((bitboardBlackQueens & pieceMask) !== 0n) {
+                    let blockers = occupancy & rookMasks[i];
+                    queenAttackedSquares |= rookTable[i].get(blockers);
+                    blockers = occupancy & bishopMasks[i];
+                    queenAttackedSquares |= bishopTable[i].get(blockers);
+                }
+                else if ((bitboardBlackRooks & pieceMask) !== 0n) {
+                    const blockers = occupancy & rookMasks[i];
+                    rookAttackedSquares |= rookTable[i].get(blockers);
+                }
+                else if ((bitboardBlackBishops & pieceMask) !== 0n) {
+                    const blockers = occupancy & bishopMasks[i];
+                    bishopAttackedSquares |= bishopTable[i].get(blockers);
+                }
+                else if ((bitboardBlackKnights & pieceMask) !== 0n) {
+                    knightAttackedSquares |= knightAttacks[i];
+                }
+                else if ((bitboardBlackPawns & pieceMask) !== 0n) {
+                    pawnAttackedSquares |= blackPawnAttacks[i];
+                }
+
+                else if ((bitboardBlackKing & pieceMask) !== 0n) {
+                    kingAttackedSquares |= kingAttacks[i];
+                }
+            }
+
+
+            const attackedSquares = queenAttackedSquares  | rookAttackedSquares   | 
+                                    bishopAttackedSquares | knightAttackedSquares | 
+                                    pawnAttackedSquares   | kingAttackedSquares;
+
+            console.log(bitboardToString(attackedSquares));
+            if ((squareMask & attackedSquares) !== 0n) return;
+
+
             moveKnight(squareIndex);
             if (bitboardBlackKing === 0n) {
                 isGameOver = true;
@@ -592,5 +881,9 @@ gameRestartLevelBtn.onclick = () => {
     logBitboardsHexadecimal();
 };
 
+buildRookTables();
+buildBishopTables();
+buildKingAttacks();
+buildBlackPawnAttacks();
 updateFENTextarea();
 showPanel(editorDiv);
