@@ -371,10 +371,10 @@ function logBitboardsHexadecimal() {
         blackPawns: bitboardBlackPawns,
     };
 
-    for (const [name, value] of Object.entries(bb)) {
-        console.log(name);
-        console.log(bitboardToString(value));
-    }
+    // for (const [name, value] of Object.entries(bb)) {
+    //     console.log(name);
+    //     console.log(bitboardToString(value));
+    // }
 }
 
 
@@ -389,6 +389,99 @@ function getWhiteKnightBitboardSquareIndex() {
         }
     }
 }
+
+function getBlackKingBitboardSquareIndex() {
+    for (let i = 0; i < 64; i++) {
+        if (bitboardBlackKing & (1n << BigInt(i))) {
+            return i;
+        }
+    }
+}
+
+
+function getAllAttackedSquares() {
+
+    const occupancy = bitboardWhiteOccupancy | bitboardBlackOccupancy;
+    let queenAttackedSquares = 0n;
+    let rookAttackedSquares = 0n;
+    let bishopAttackedSquares = 0n;
+    let knightAttackedSquares = 0n;
+    let pawnAttackedSquares = 0n;
+    let kingAttackedSquares = 0n;
+    
+
+    for (let i = 0; i<64; i++) {
+        const pieceMask = 1n << BigInt(i)
+
+        if ((bitboardBlackQueens & pieceMask) !== 0n) {
+            let blockers = occupancy & rookMasks[i];
+            queenAttackedSquares |= rookTable[i].get(blockers);
+            blockers = occupancy & bishopMasks[i];
+            queenAttackedSquares |= bishopTable[i].get(blockers);
+        }
+        else if ((bitboardBlackRooks & pieceMask) !== 0n) {
+            const blockers = occupancy & rookMasks[i];
+            rookAttackedSquares |= rookTable[i].get(blockers);
+        }
+        else if ((bitboardBlackBishops & pieceMask) !== 0n) {
+            const blockers = occupancy & bishopMasks[i];
+            bishopAttackedSquares |= bishopTable[i].get(blockers);
+        }
+        else if ((bitboardBlackKnights & pieceMask) !== 0n) {
+            knightAttackedSquares |= knightAttacks[i];
+        }
+        else if ((bitboardBlackPawns & pieceMask) !== 0n) {
+            pawnAttackedSquares |= blackPawnAttacks[i];
+        }
+
+        else if ((bitboardBlackKing & pieceMask) !== 0n) {
+            kingAttackedSquares |= kingAttacks[i];
+        }
+    }
+
+
+    const attackedSquares = queenAttackedSquares  | rookAttackedSquares   | 
+                            bishopAttackedSquares | knightAttackedSquares | 
+                            pawnAttackedSquares   | kingAttackedSquares;
+    
+    return attackedSquares;
+}
+
+
+function getAllAttackedSquaresFromState(s) {
+    const occupancy = getOccupancy(s);
+
+    let attacked = 0n;
+
+    for (let i = 0; i < 64; i++) {
+        const mask = 1n << BigInt(i);
+
+        if (s.blackQueens & mask) {
+            let blockers = occupancy & rookMasks[i];
+            attacked |= rookTable[i].get(blockers);
+
+            blockers = occupancy & bishopMasks[i];
+            attacked |= bishopTable[i].get(blockers);
+        }
+        else if (s.blackRooks & mask) {
+            const blockers = occupancy & rookMasks[i];
+            attacked |= rookTable[i].get(blockers);
+        }
+        else if (s.blackBishops & mask) {
+            const blockers = occupancy & bishopMasks[i];
+            attacked |= bishopTable[i].get(blockers);
+        }
+        else if (s.blackKnights & mask) {
+            attacked |= knightAttacks[i];
+        }
+        else if (s.blackPawns & mask) {
+            attacked |= blackPawnAttacks[i];
+        }
+    }
+
+    return attacked | kingAttacks[getBlackKingBitboardSquareIndex()];
+}
+
 
 function moveKnight(targetBitboardSquareIndex) {
     const DOMTargetIndex = getOppositeTypeSquareIndex(targetBitboardSquareIndex);
@@ -419,7 +512,7 @@ function moveKnight(targetBitboardSquareIndex) {
     bitboardBlackKnights   &= mask;
     bitboardBlackPawns     &= mask;
 
-    console.log('==============================');
+    // console.log('==============================');
     logBitboardsHexadecimal();
 
 
@@ -675,10 +768,142 @@ function buildBlackPawnAttacks() {
 }
 
 
+function cloneState(s) {
+    return {
+        knight: s.knight,
+
+        blackQueens: s.blackQueens,
+        blackRooks: s.blackRooks,
+        blackBishops: s.blackBishops,
+        blackKnights: s.blackKnights,
+        blackPawns: s.blackPawns,
+
+        whitePawns: s.whitePawns,
+    };
+}
+
+
+function hashState(s) { 
+    return (
+        s.knight + "|" +
+        s.blackQueens + "|" +
+        s.blackRooks + "|" +
+        s.blackBishops + "|" +
+        s.blackKnights + "|" +
+        s.blackPawns + "|" +
+        s.whitePawns
+    );
+}
+
+
+function getOccupancy(s) {
+    return (
+        s.blackQueens |
+        s.blackRooks |
+        s.blackBishops |
+        s.blackKnights |
+        s.blackPawns |
+        s.whitePawns |
+        (1n << BigInt(s.knight))
+    );
+}
+
+
+function bfsKnightToKing(initialState) {
+
+    const queue = [];
+    const visited = new Set();
+
+    queue.push({
+        state: initialState,
+        path: [initialState.knight]
+    });
+
+    visited.add(hashState(initialState));
+
+    while (queue.length > 0) {
+
+        const node = queue.shift();
+        const s = node.state;
+
+
+        // goal check
+        if (s.knight === getBlackKingBitboardSquareIndex()) {
+            return node.path;
+        }
+        const attacked = getAllAttackedSquaresFromState(s);
+        const moves = getKnightMoves(s.knight, bitboardWhitePawns) & ~attacked;
+        console.log('attacked bitboard');
+        console.log(bitboardToString(attacked));
+        console.log('queen bitboard');
+        console.log(bitboardToString(s.blackQueens));
+
+        for (let to = 0; to < 64; to++) {
+
+            const toMask = 1n << BigInt(to);
+            if ((moves & toMask) === 0n) continue;
+
+            const ns = cloneState(s);
+
+            const fromMask = 1n << BigInt(s.knight);
+
+            // move knight
+            ns.knight = to;
+
+            // remove knight from old position implicitly
+
+            // capture logic (IMPORTANT)
+            const clearMask = ~toMask;
+
+            if (ns.blackQueens & toMask) {ns.blackQueens &= clearMask; console.log('\n\n\n\ncaptured queen\n\n\n\n')}
+            ns.blackRooks &= clearMask;
+            ns.blackBishops &= clearMask;
+            ns.blackKnights &= clearMask;
+            ns.blackPawns &= clearMask;
+
+
+            const key = hashState(ns);
+            if (visited.has(key)) continue;
+
+            visited.add(key);
+
+            queue.push({
+                state: ns,
+                path: [...node.path, to]
+            });
+        }
+    }
+    throw new Error('Unsolvable position.');
+}
+
+
+
+
+function getShortestPath() {
+    const startState = {
+        knight: getWhiteKnightBitboardSquareIndex(),
+        blackQueens: bitboardBlackQueens,
+        blackRooks: bitboardBlackRooks,
+        blackBishops: bitboardBlackBishops,
+        blackKnights: bitboardBlackKnights,
+        blackPawns: bitboardBlackPawns,
+
+        whitePawns: bitboardWhitePawns,
+    };
+
+    const path = bfsKnightToKing(startState);
+    return path;
+}
+
+
+
+
+
 const board = document.createElement('div');
 board.classList.add('board');
 for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
+
     const square = document.createElement('div');
     square.classList.add('square');
 
@@ -707,51 +932,9 @@ for (let row = 0; row < 8; row++) {
             const knightSquare = getWhiteKnightBitboardSquareIndex();
             if ((squareMask & getKnightMoves(knightSquare, bitboardWhiteOccupancy)) === 0n) return;
             
-            const occupancy = bitboardBlackOccupancy | bitboardWhiteOccupancy;
+            const attackedSquares = getAllAttackedSquares();
 
-            let queenAttackedSquares = 0n;
-            let rookAttackedSquares = 0n;
-            let bishopAttackedSquares = 0n;
-            let knightAttackedSquares = 0n;
-            let pawnAttackedSquares = 0n;
-            let kingAttackedSquares = 0n;
-            
-
-            for (let i = 0; i<64; i++) {
-                const pieceMask = 1n << BigInt(i)
-
-                if ((bitboardBlackQueens & pieceMask) !== 0n) {
-                    let blockers = occupancy & rookMasks[i];
-                    queenAttackedSquares |= rookTable[i].get(blockers);
-                    blockers = occupancy & bishopMasks[i];
-                    queenAttackedSquares |= bishopTable[i].get(blockers);
-                }
-                else if ((bitboardBlackRooks & pieceMask) !== 0n) {
-                    const blockers = occupancy & rookMasks[i];
-                    rookAttackedSquares |= rookTable[i].get(blockers);
-                }
-                else if ((bitboardBlackBishops & pieceMask) !== 0n) {
-                    const blockers = occupancy & bishopMasks[i];
-                    bishopAttackedSquares |= bishopTable[i].get(blockers);
-                }
-                else if ((bitboardBlackKnights & pieceMask) !== 0n) {
-                    knightAttackedSquares |= knightAttacks[i];
-                }
-                else if ((bitboardBlackPawns & pieceMask) !== 0n) {
-                    pawnAttackedSquares |= blackPawnAttacks[i];
-                }
-
-                else if ((bitboardBlackKing & pieceMask) !== 0n) {
-                    kingAttackedSquares |= kingAttacks[i];
-                }
-            }
-
-
-            const attackedSquares = queenAttackedSquares  | rookAttackedSquares   | 
-                                    bishopAttackedSquares | knightAttackedSquares | 
-                                    pawnAttackedSquares   | kingAttackedSquares;
-
-            console.log(bitboardToString(attackedSquares));
+            // console.log(bitboardToString(attackedSquares));
             if ((squareMask & attackedSquares) !== 0n) return;
 
 
@@ -783,15 +966,15 @@ function incrementCurrentMovesCounter() {
     gameCurrentMovesSpan.textContent = newMoves;
 
 
-    if (newMoves >= 2 * optimalMoves) {
-        gameCurrentMovesSpan.classList.remove('game-decent');
-        gameCurrentMovesSpan.classList.add('game-bad');
-    }
-    else if (newMoves >= 1.5 * optimalMoves) {
+    if (newMoves > optimalMoves && newMoves <= 1.5 * optimalMoves) {
         gameCurrentMovesSpan.classList.remove('game-perfect');
         gameCurrentMovesSpan.classList.add('game-decent');
     }
-
+    if (newMoves > 1.5 * optimalMoves) {
+        gameCurrentMovesSpan.classList.remove('game-decent');
+        gameCurrentMovesSpan.classList.add('game-bad');
+    }
+    
 }
 
 pieceElements.forEach(pieceElement => {
@@ -827,7 +1010,7 @@ const editorCopyFENbtn = document.getElementById('editor-copy-fen-btn');
 editorCopyFENbtn.onclick = async () => {
     const fen = getFEN();
     try {
-        await navigator.clipboard.writeText(editorFENTextarea.value);
+        await navigator.clipboard.writeText(getRawFEN(editorFENTextarea.value));
         editorCopyFENbtn.textContent = 'Copied!';
         setTimeout(() => {
             editorCopyFENbtn.textContent = 'Copy FEN';
@@ -839,14 +1022,32 @@ editorCopyFENbtn.onclick = async () => {
 
 };
 
-
+function getKingIndexFromBitboard(bb) {
+    for (let i = 0; i < 64; i++) {
+        if (bb & (1n << BigInt(i))) return i;
+    }
+}
 
 function getRawFEN(fen) {
     return fen.replaceAll(/\s/g, '');
 }
 
+
+function squareNameFromIndex(index) {
+    const file = index % 8;
+    const rank = Math.floor(index / 8);
+
+    const files = "abcdefgh";
+
+    return files[file] + (rank + 1);
+}
+
+let shortestPath;
+
 const editorPlayBtn = document.getElementById('editor-play-btn');
 editorPlayBtn.onclick = () => {
+    initBitboards();
+
     try {
         validateFEN(editorFENTextarea.value);
     }
@@ -854,13 +1055,21 @@ editorPlayBtn.onclick = () => {
         console.error(e);
         return;
     }
-
+    try {
+        shortestPath = getShortestPath();
+    }
+    catch(e) {
+        console.log(e);
+        return;
+    }
+    
+    console.log(shortestPath.map(square => squareNameFromIndex(square)));
     resetCurrentMovesCounter();
+    gameOptimalMovesSpan.textContent = shortestPath.length - 1;
     inEditor = false;
     isGameOver = false;
     showPanel(gameDiv);
-    initBitboards();
-    logBitboardsHexadecimal();
+    // logBitboardsHexadecimal();
 
 
 };
@@ -872,6 +1081,20 @@ gameEditBtn.onclick = () => {
     showPanel(editorDiv);
 };
 
+
+const gameShowSolutionBtn = document.getElementById('game-show-solution-btn');
+gameShowSolutionBtn.onclick = () => {
+    gameRestartLevelBtn.onclick();
+    isGameOver = true;
+
+    let i = 1;
+    const interval = setInterval(() => {
+        moveKnight(shortestPath[i++]);
+        incrementCurrentMovesCounter();
+        if (i == shortestPath.length) clearInterval(interval);
+    }, 1000);
+};
+
 const gameRestartLevelBtn = document.getElementById('game-restart-level-btn');
 gameRestartLevelBtn.onclick = () => {
     isGameOver = false;
@@ -881,9 +1104,12 @@ gameRestartLevelBtn.onclick = () => {
     logBitboardsHexadecimal();
 };
 
-buildRookTables();
-buildBishopTables();
-buildKingAttacks();
-buildBlackPawnAttacks();
-updateFENTextarea();
-showPanel(editorDiv);
+window.parent.addEventListener('load', () => {
+    updateFENTextarea();
+    showPanel(editorDiv);
+    buildRookTables();
+    buildBishopTables();
+    buildKingAttacks();
+    buildBlackPawnAttacks();
+});
+

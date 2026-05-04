@@ -18,5 +18,5 @@
 | Result | Description |
 |--------|-------------|
 | Optimal number of moves | Perfect — well done |
-| 150% of the number of optimal moves | Decent — See the best solution |
-| 200% of the number of optimal moves | Try again for a better path |
+| Up to 150% of the number of optimal moves | Decent — See the best solution |
+| More than 150% of the number of optimal moves | Try again for a better path |
