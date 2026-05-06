@@ -1,49 +1,24 @@
 # Knight Journey
 
-A single-file browser puzzle game built for CHESSWORLD.GAMES.
+## Overview
+A puzzle-based chess variant where the goal is to guide a single white knight to capture the black king in the fewest moves possible.
 
-## How it works
+## How it differs from chess
+- You control only the white knight
+- The knight moves using standard chess rules
+- Squares attacked by enemy pieces are forbidden
+- Capturing pieces can open new paths
+- The objective is to reach and capture the black king
 
-Pure vanilla HTML, CSS, and JavaScript — no build step, no dependencies. Everything is in `index.html`.
+## Features
+- Custom position editor
+- Automatic shortest path calculation
+- Move counter with optimal solution comparison
 
-The game renders a grid using CSS Grid, tracks bishop position and valid diagonal moves in JS, and uses inline SVG for the bishop and goal pieces.
+## Tech
+- Vanilla JavaScript
+- No dependencies
+- Fully static
 
-## Structure
-
-```
-bishop-maze/
-├── index.html      ← entire game (HTML + CSS + JS)
-├── game.json       ← platform manifest
-├── description.md  ← shown above the game iframe
-├── rules.md        ← shown below the game iframe
-├── thumbnail.png   ← 16:9 preview screenshot
-└── README.md       ← this file
-```
-
-## Local development
-
-No build step needed. Just open `index.html` in a browser.
-
-To test within the platform:
-
-```bash
-npm run dev
-```
-
-Temporarily add `"bishop-maze"` to `games.registry.json` (do not commit this change), then visit `/games/bishop-maze`.
-
-## Level design
-
-Levels are defined as plain JS objects in `index.html` under the `LEVELS` array. Each level specifies:
-
-- `size` — grid dimensions (NxN)
-- `walls` — array of `[row, col]` blocked squares
-- `start` — bishop starting position
-- `goal` — target position
-- `par` — target move count
-
-To add or modify levels, edit the `LEVELS` array directly.
-
-## Author
-
-kablz
+## Notes
+This is a focused implementation built around pathfinding and puzzle design.

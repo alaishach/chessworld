@@ -3,13 +3,25 @@
 - Move the knight from its starting square to the black king
 - The knight can only move the same way it moves in chess
 - The white pawns occupy squares — you can't step on them
-- The black pieces can capture your knight, resetting the level
+- The black pieces block squares, until they're captured
+- You can't capture a protected piece
 
 ## Controls
 
+### Editor
+
 | Action | How |
 |--------|-----|
-| Move knight | Click any highlighted square |
+| Select piece | Click on a piece from the pool |
+| Place piece | Click on a square while a piece is selected |
+| Remove piece | Click on a square while a piece is not selected |
+| Import position | Paste FEN into the text field |
+
+### Editor
+
+| Action | How |
+|--------|-----|
+| Move knight | Click any square the knight can move to |
 | Restart level | Click the Restart button |
 | View solution | Click the View solution button |
 
