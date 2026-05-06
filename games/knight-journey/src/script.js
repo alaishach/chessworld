@@ -382,6 +382,11 @@ function moveKnight(targetBitboardSquareIndex) {
     bitboardBlackBishops   &= mask;
     bitboardBlackKnights   &= mask;
     bitboardBlackPawns     &= mask;
+
+    if (bitboardBlackKing === 0n) {
+        isGameOver = true;
+        editorHasBlackKing = false;
+    }
 }
 
 
@@ -703,10 +708,6 @@ for (let row = 0; row < 8; row++) {
 
 
             moveKnight(squareIndex);
-            if (bitboardBlackKing === 0n) {
-                isGameOver = true;
-                editorHasBlackKing = false;
-            }
             incrementCurrentMovesCounter();
         }
     });
@@ -852,26 +853,29 @@ editorPlayBtn.onclick = () => {
 const gameEditBtn = document.getElementById('game-edit-btn');
 gameEditBtn.onclick = () => {
     updateFENTextarea();
+    clearInterval(gameShowSolutionInterval);
     inEditor = true;
     showPanel(editorDiv);
 };
 
-
+let gameShowSolutionInterval;
 const gameShowSolutionBtn = document.getElementById('game-show-solution-btn');
 gameShowSolutionBtn.onclick = () => {
     gameRestartLevelBtn.onclick();
+
     isGameOver = true;
 
     let i = 1;
-    const interval = setInterval(() => {
+    gameShowSolutionInterval = setInterval(() => {
         moveKnight(shortestPath[i++]);
         incrementCurrentMovesCounter();
-        if (i == shortestPath.length) clearInterval(interval);
+        if (i == shortestPath.length) clearInterval(gameShowSolutionInterval);
     }, 1000);
 };
 
 const gameRestartLevelBtn = document.getElementById('game-restart-level-btn');
 gameRestartLevelBtn.onclick = () => {
+    clearInterval(gameShowSolutionInterval);
     isGameOver = false;
     parseFEN(getRawFEN(editorFENTextarea.value));
     resetCurrentMovesCounter();
