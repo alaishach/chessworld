@@ -11,8 +11,8 @@
   "changelog": [
     {
       "version": "1.0.0",
-      "date": "TBD",
-      "notes": "TBD"
+      "date": "2026-05-06",
+      "notes": "Initial release. Board editor, solution finder"
     }
   ]
 }
