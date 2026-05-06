@@ -9,6 +9,8 @@ const editorFENTextarea = document.getElementById('editor-fen-textarea');
 const gameCurrentMovesSpan = document.getElementById('game-current-moves-span');
 const gameOptimalMovesSpan = document.getElementById('game-optimal-moves-span');
 
+const editorErrorMsg = document.getElementById('editor-error-msg');
+
 // used for placing pieces in the editor
 const whiteKnightElement = document.getElementById('white-knight');
 const whitePawnElement = document.getElementById('white-pawn');
@@ -138,7 +140,7 @@ function validateFEN(fen) {
             }
         }
 
-        if (fileCount !== 8) throw new Error(`Rank ${r + 1} must contain exactly 8 squares`);
+        if (fileCount !== 8) throw new Error(`Rank ${8 - r} must contain exactly 8 squares`);
     }
 
     if (tempBoard.length !== 64) throw new Error('FEN does not resolve to 64 squares');
@@ -151,7 +153,14 @@ function validateFEN(fen) {
 
 function parseFEN(fen) {
 
-    const tempBoard = validateFEN(fen);
+    let tempBoard;
+    try {
+        tempBoard = validateFEN(fen);
+    }
+    catch (e) {
+        showErrorMesage(e.message);
+        return;
+    }
     const squares = Array.from(board.children), map = pieceMap;
 
     for (let i = 0; i < 64; i++) {
@@ -675,6 +684,7 @@ for (let row = 0; row < 8; row++) {
     square.addEventListener('click', () => {
         if (inEditor) {
             if (editorCurrentPiece) {
+                hideErrorMessage();
                 placePieceEditor(editorCurrentPiece, square);
             }
             else {
@@ -753,12 +763,16 @@ pieceElements.forEach(pieceElement => {
     });
 });
 
-editorFENTextarea.addEventListener('change', () => parseFEN(getRawFEN(editorFENTextarea.value)));
+editorFENTextarea.addEventListener('change', () => {
+    hideErrorMessage();
+    parseFEN(getRawFEN(editorFENTextarea.value));
+});
 
 document.getElementById('editor-clear-board-btn').onclick = () => {
     Array.from(board.children).forEach(square => {
         clearSquare(square);
     });
+    hideErrorMessage();
     updateFENTextarea();
 }
 
@@ -777,6 +791,16 @@ editorCopyFENbtn.onclick = async () => {
     }
 
 };
+
+
+function showErrorMesage(message) {
+    editorErrorMsg.textContent = message;
+    editorErrorMsg.style.visibility = 'visible';
+}
+
+function hideErrorMessage() {
+    editorErrorMsg.style.visibility = 'hidden';
+}
 
 
 function getRawFEN(fen) {
@@ -803,14 +827,16 @@ editorPlayBtn.onclick = () => {
         validateFEN(getRawFEN(editorFENTextarea.value));
     }
     catch (e) {
-        console.error(e);
+        showErrorMesage(e.message);
+        // console.error(e);
         return;
     }
     try {
         shortestPath = getShortestPath();
     }
     catch(e) {
-        console.error(e);
+        // console.error(e);
+        showErrorMesage(e.message);
         return;
     }
     
@@ -851,6 +877,8 @@ gameRestartLevelBtn.onclick = () => {
     resetCurrentMovesCounter();
     initBitboards();
 };
+
+
 
 window.parent.addEventListener('load', () => {
     updateFENTextarea();
