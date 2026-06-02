@@ -778,6 +778,142 @@ document.getElementById('editor-clear-board-btn').onclick = () => {
 }
 
 const editorCopyFENbtn = document.getElementById('editor-copy-fen-btn');
+const editorSaveConfigBtn = document.getElementById('editor-save-config-btn');
+const editorOpenSavedBtn = document.getElementById('editor-open-saved-btn');
+const savedConfigurationsModal = document.getElementById('saved-configurations-modal');
+const savedConfigurationsCloseBtn = document.getElementById('saved-configurations-close-btn');
+
+const savedConfigurationsStorageKey = 'knightJourneySavedConfigurations';
+
+function getSavedConfigurations() {
+    try {
+        return JSON.parse(localStorage.getItem(savedConfigurationsStorageKey) ?? '[]');
+    }
+    catch {
+        return [];
+    }
+}
+
+function persistSavedConfigurations(configurations) {
+    localStorage.setItem(savedConfigurationsStorageKey, JSON.stringify(configurations));
+}
+
+function renderSavedConfigurationsList() {
+    const list = document.getElementById('saved-configurations-list');
+    list.innerHTML = '';
+
+    const configurations = getSavedConfigurations();
+    if (!configurations.length) {
+        const empty = document.createElement('p');
+        empty.className = 'saved-config-empty';
+        empty.textContent = 'No saved configurations yet.';
+        list.appendChild(empty);
+        return;
+    }
+
+    configurations.forEach((fen, index) => {
+        const item = document.createElement('li');
+        item.className = 'saved-config-item';
+
+        const fenText = document.createElement('span');
+        fenText.className = 'saved-config-fen';
+        fenText.textContent = fen;
+
+        const controls = document.createElement('div');
+        controls.className = 'saved-config-actions';
+
+        const loadButton = document.createElement('button');
+        loadButton.type = 'button';
+        loadButton.className = 'saved-config-load-btn';
+        loadButton.textContent = 'Load';
+        loadButton.addEventListener('click', () => loadSavedConfiguration(index));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'saved-config-delete-btn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => deleteSavedConfiguration(index));
+
+        controls.appendChild(loadButton);
+        controls.appendChild(deleteButton);
+        item.appendChild(fenText);
+        item.appendChild(controls);
+        list.appendChild(item);
+    });
+}
+
+function openSavedConfigurationsModal() {
+    renderSavedConfigurationsList();
+    savedConfigurationsModal.classList.remove('hidden');
+    savedConfigurationsModal.setAttribute('aria-hidden', 'false');
+    window.addEventListener('keydown', onSavedConfigurationsModalKeydown);
+}
+
+function closeSavedConfigurationsModal() {
+    savedConfigurationsModal.classList.add('hidden');
+    savedConfigurationsModal.setAttribute('aria-hidden', 'true');
+    window.removeEventListener('keydown', onSavedConfigurationsModalKeydown);
+}
+
+function onSavedConfigurationsModalKeydown(event) {
+    if (event.key === 'Escape') {
+        closeSavedConfigurationsModal();
+    }
+}
+
+function saveCurrentConfiguration() {
+    hideErrorMessage();
+    const fen = getRawFEN(getFEN());
+
+    try {
+        validateFEN(fen);
+    }
+    catch (e) {
+        showErrorMesage(e.message);
+        return;
+    }
+
+    const configurations = getSavedConfigurations();
+    if (configurations.includes(fen)) {
+        showErrorMesage('This configuration is already saved.');
+        return;
+    }
+
+    configurations.push(fen);
+    persistSavedConfigurations(configurations);
+    editorSaveConfigBtn.textContent = 'Saved!';
+    setTimeout(() => {
+        editorSaveConfigBtn.textContent = 'Save configuration';
+    }, 1500);
+}
+
+function loadSavedConfiguration(index) {
+    const configurations = getSavedConfigurations();
+    const fen = configurations[index];
+    if (!fen) return;
+
+    parseFEN(fen);
+    updateFENTextarea();
+    closeSavedConfigurationsModal();
+}
+
+function deleteSavedConfiguration(index) {
+    const configurations = getSavedConfigurations();
+    configurations.splice(index, 1);
+    persistSavedConfigurations(configurations);
+    renderSavedConfigurationsList();
+}
+
+savedConfigurationsModal.addEventListener('click', (event) => {
+    if (event.target === savedConfigurationsModal) {
+        closeSavedConfigurationsModal();
+    }
+});
+
+editorSaveConfigBtn.onclick = saveCurrentConfiguration;
+editorOpenSavedBtn.onclick = openSavedConfigurationsModal;
+savedConfigurationsCloseBtn.onclick = closeSavedConfigurationsModal;
+
 editorCopyFENbtn.onclick = async () => {
     const fen = getFEN();
     try {

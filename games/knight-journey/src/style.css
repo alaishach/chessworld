@@ -9,10 +9,9 @@
     --text-soft: rgba(255, 255, 255, 0.8);
 }
 
-
-
 * {
     box-sizing: border-box; 
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
 html {
@@ -31,7 +30,6 @@ body {
     align-items: center;
 }
 
-
 #main-div {
     display: flex;
     flex-direction: column;
@@ -40,7 +38,6 @@ body {
     height: 100%;
 }
 
-
 .hidden {
     display: none !important;
 }
@@ -48,11 +45,14 @@ body {
 .panel {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .panel > * {
     margin: 50px;
 }
+
+/* ---------------- PANELS ---------------- */
 
 #editor-pieces-div,
 #editor-controls-div,
@@ -72,6 +72,7 @@ body {
     backdrop-filter: blur(8px);
 }
 
+/* ---------------- BOARD ---------------- */
 
 .board {
     display: grid;
@@ -86,18 +87,16 @@ body {
     box-shadow: 0 18px 50px rgba(0,0,0,0.45);
 }
 
+/* ---------------- PIECES ---------------- */
+
 .square {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
 }
 
 .light { background: #e9e9e9; }
 .dark { background: #3b3b3b; }
-
-
 
 svg {
     width: 90%;
@@ -139,17 +138,13 @@ svg {
     padding: 10px;
 
     outline: none;
-    box-shadow: none;        
-}
-
-#editor-fen-textarea:focus {
-    outline: none;
-    border-color: rgba(255,255,255,0.25);
 }
 
 
 #editor-controls-div button,
-#game-controls-div button {
+#game-controls-div button,
+.modal-close-btn,
+.saved-config-actions button {
     color: white;
     width: 200px;
     cursor: pointer;
@@ -171,26 +166,120 @@ svg {
 }
 
 #editor-controls-div button:hover,
-#game-controls-div button:hover {
+#game-controls-div button:hover,
+.saved-config-actions button:hover,
+.modal-close-btn:hover {
     background: rgba(255,255,255,0.18);
     transform: translateY(-2px);
 }
 
+/* ---------------- MODAL ---------------- */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.65);
+    padding: 24px;
+}
+
+.modal-content {
+    width: min(760px, 100%);
+    max-height: min(90vh, 720px);
+    overflow: hidden;
+    display: grid;
+    gap: 18px;
+    padding: 24px;
+    border-radius: 22px;
+    border: 1px solid var(--panel-border);
+    background: rgba(18, 17, 42, 0.96);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--text-soft);
+}
+
+/* ---------------- SAVED CONFIG LIST ---------------- */
+
+#saved-configurations-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+    overflow: auto;
+}
+
+.saved-config-item {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* FEN TEXT FIX */
+.saved-config-fen {
+    font-family: inherit;
+    font-size: 1.15rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+/* SMALLER LOAD/DELETE BUTTONS */
+.saved-config-actions button {
+    width: 110px;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 10px;
+}
+
+.saved-config-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+#game-edit-btn{
+    margin-top: 20px;
+}
+
+/* ---------------- EMPTY STATE ---------------- */
+
+.saved-config-empty {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 1rem;
+}
+
+/* ---------------- GAME INFO ---------------- */
 
 #game-info-div > * {
     font-size: 28px;
     color: var(--text-soft);
 }
 
-.game-perfect { color: #4ade80; }
-.game-decent { color: #fbbf24; }
-.game-bad { color: #f87171; }
+/* ---------------- ERROR ---------------- */
 
 #editor-error-msg {
     color: #f87171;
     min-height: 1.5rem;
 }
 
+/* ---------------- RESPONSIVE ---------------- */
 
 @media (max-width: 1400px) {
 
@@ -211,31 +300,17 @@ svg {
     .panel {
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
     }
 
     .panel > * {
         margin: 15px 0;
     }
 
-    #editor-div {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-    }
-
     #editor-pieces-div {
-        order: 1;
         width: min(92vw, 420px);
-        display: flex;
         flex-direction: row;
         flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
         gap: 10px;
-        padding: 10px;
     }
 
     #editor-pieces-div svg {
@@ -243,34 +318,15 @@ svg {
         height: 52px;
     }
 
-    #editor-board-div {
-        order: 2;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-
     .board {
         width: min(85vw, 420px);
         height: min(85vw, 420px);
-    }
-
-    #editor-controls-div {
-        order: 3;
-        width: min(92vw, 420px);
-        align-items: center;
     }
 
     #editor-controls-div button,
     #game-controls-div button {
         width: 100%;
         font-size: 18px;
-        padding: 14px;
-    }
-
-    #game-info-div > * {
-        font-size: 22px;
-        text-align: center;
     }
 
     .board-piece {
@@ -278,3 +334,8 @@ svg {
         height: 50px;
     }
 }
+
+
+.game-perfect { color: #4ade80; }
+.game-decent { color: #fbbf24; }
+.game-bad { color: #f87171; }
