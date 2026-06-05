@@ -1,0 +1,18 @@
+{
+  "title": "Knight Journey",
+  "description": "Find the fastest route for the knight to capture the king.",
+  "author": "kablz",
+  "version": "1.0.0",
+  "thumbnail": "thumbnail.png",
+  "entry": "index.html",
+  "tags": ["puzzle", "singleplayer", "strategy"],
+  "rating": "E",
+  "chessRelation": "Uses the knight's movement for avoiding threats and achieving the goal of capturing the king.",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-05-06",
+      "notes": "Initial release. Board editor, solution finder"
+    }
+  ]
+}
